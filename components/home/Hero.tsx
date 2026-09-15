@@ -190,9 +190,6 @@ export default function Hero() {
             flex
             items-center
             justify-end
-            gap-3
-            sm:gap-5
-            md:gap-7
             -mt-1
             md:-mt-2
           "
@@ -203,32 +200,6 @@ export default function Hero() {
             delay: 0.8,
           }}
         >
-
-          {/* LEFT LEAVES */}
-          <svg
-            viewBox="0 0 130 70"
-            className="
-              w-14
-              sm:w-20
-              md:w-24
-              lg:w-28
-              shrink-0
-              text-[#a7aa70]
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <path d="M125 35 C88 33 53 27 8 8" />
-
-            <path d="M75 31 C73 19 65 10 51 7" />
-
-            <path d="M96 34 C98 22 108 13 120 11" />
-
-            <path d="M57 27 C48 37 36 43 21 42" />
-          </svg>
-
 
           {/* THROUGH MY */}
           <span
@@ -250,33 +221,6 @@ export default function Hero() {
           >
             THROUGH MY
           </span>
-
-
-          {/* RIGHT LEAVES */}
-          <svg
-            viewBox="0 0 130 70"
-            className="
-              w-14
-              sm:w-20
-              md:w-24
-              lg:w-28
-              shrink-0
-              text-[#a7aa70]
-              scale-x-[-1]
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <path d="M125 35 C88 33 53 27 8 8" />
-
-            <path d="M75 31 C73 19 65 10 51 7" />
-
-            <path d="M96 34 C98 22 108 13 120 11" />
-
-            <path d="M57 27 C48 37 36 43 21 42" />
-          </svg>
 
         </motion.div>
 
