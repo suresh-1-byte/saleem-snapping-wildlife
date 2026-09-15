@@ -1,0 +1,99 @@
+{
+  "stories": [
+    {
+      "id": "vedanthangal",
+      "title": "A Morning at Vedanthangal",
+      "location": "Vedanthangal, Tamil Nadu",
+      "date": "Winter 2025",
+      "introduction": "Dawn breaks over the wetlands, and thousands of wings take flight.",
+      "content": "At Vedanthangal, the day begins in layers of sound, movement, and patient observation. The first light changes the wetland before the birds do. Egrets lift from the trees, the water catches the sky, and a quiet morning becomes a record of life moving together.",
+      "heroImage": "/images/story-vedanthangal.jpg",
+      "images": [
+        "/images/story-hero.jpg",
+        "/images/story-support-1.jpg",
+        "/images/story-support-2.jpg"
+      ],
+      "species": [
+        "Great Egret",
+        "Painted Stork",
+        "Spot-billed Pelican"
+      ]
+    },
+    {
+      "id": "pulicat-flamingos",
+      "title": "Flamingos of Pulicat",
+      "location": "Pulicat Lake, Tamil Nadu",
+      "date": "Monsoon 2025",
+      "introduction": "A sea of pink against the grey monsoon skies.",
+      "content": "Pulicat holds its colour in the distance, where flock and shoreline become one moving landscape. From far away, the flock seems still. Then a ripple passes through it: a turn of the head, a wing opening, a whole shoreline changing shape.",
+      "heroImage": "/images/story-pulicat.jpg",
+      "images": [
+        "/images/story-pulicat.jpg",
+        "/images/story-support-1.jpg",
+        "/images/story-support-2.jpg"
+      ],
+      "species": [
+        "Greater Flamingo",
+        "Painted Stork",
+        "Black-winged Stilt"
+      ]
+    },
+    {
+      "id": "bandipur-forests",
+      "title": "Into the Forests of Bandipur",
+      "location": "Bandipur, Karnataka",
+      "date": "Summer 2025",
+      "introduction": "Where elephants roam and the forest whispers ancient secrets.",
+      "content": "Bandipur rewards the slow observer with glimpses that are easy to miss and difficult to forget. In the heat of the forest, movement becomes deliberate. Every pause carries information: a distant call, a broken branch, the shape of a family group through the trees.",
+      "heroImage": "/images/story-bandipur.jpg",
+      "images": [
+        "/images/story-bandipur.jpg",
+        "/images/story-support-1.jpg",
+        "/images/story-support-2.jpg"
+      ],
+      "species": [
+        "Asian Elephant",
+        "Chital",
+        "Indian Gaur"
+      ]
+    },
+    {
+      "id": "mudumalai",
+      "title": "The Wild Side of Mudumalai",
+      "location": "Mudumalai, Tamil Nadu",
+      "date": "Spring 2025",
+      "introduction": "In the foothills of the Nilgiris, wildlife thrives undisturbed.",
+      "content": "The forest opens and closes around each encounter, offering only the moment it is ready to give. Mudumalai is a study in edges: forest and road, light and shade, presence and disappearance.",
+      "heroImage": "/images/story-mudumalai.jpg",
+      "images": [
+        "/images/story-mudumalai.jpg",
+        "/images/story-support-1.jpg",
+        "/images/story-support-2.jpg"
+      ],
+      "species": [
+        "Indian Gaur",
+        "Sambar Deer",
+        "Asian Elephant"
+      ]
+    },
+    {
+      "id": "nilgiris-birds",
+      "title": "Birds of the Nilgiris",
+      "location": "Nilgiris, Tamil Nadu",
+      "date": "Autumn 2025",
+      "introduction": "High in the mountains, rare species make their home.",
+      "content": "In the Nilgiris, mist and birds share the same changing light. The mountain birds reveal themselves through fragments: a call from the canopy, a flash of colour in the mist, a silhouette held for just long enough to remember.",
+      "heroImage": "/images/story-nilgiris.jpg",
+      "images": [
+        "/images/story-nilgiris.jpg",
+        "/images/story-support-1.jpg",
+        "/images/story-support-2.jpg"
+      ],
+      "species": [
+        "Nilgiri Flycatcher",
+        "Black-and-Orange Flycatcher",
+        "Malabar Whistling Thrush"
+      ]
+    }
+  ]
+}

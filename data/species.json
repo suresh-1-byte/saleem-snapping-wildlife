@@ -1,0 +1,43 @@
+{
+  "species": [
+    {
+      "id": "painted-stork",
+      "commonName": "Painted Stork",
+      "scientificName": "Mycteria leucocephala",
+      "category": "Birds",
+      "images": [
+        "/images/species-painted-stork-1.jpg"
+      ],
+      "locations": [
+        "Vedanthangal, Tamil Nadu"
+      ],
+      "observation": "Elegant waders often seen in large colonies during breeding season."
+    },
+    {
+      "id": "asian-elephant",
+      "commonName": "Asian Elephant",
+      "scientificName": "Elephas maximus",
+      "category": "Mammals",
+      "images": [
+        "/images/species-elephant-1.jpg"
+      ],
+      "locations": [
+        "Bandipur, Karnataka"
+      ],
+      "observation": "Gentle giants roaming the forests in small family groups."
+    },
+    {
+      "id": "common-kingfisher",
+      "commonName": "Common Kingfisher",
+      "scientificName": "Alcedo atthis",
+      "category": "Birds",
+      "images": [
+        "/images/species-kingfisher-1.jpg"
+      ],
+      "locations": [
+        "Pulicat Lake, Tamil Nadu"
+      ],
+      "observation": "A flash of brilliant blue hunting along the water's edge."
+    }
+  ]
+}

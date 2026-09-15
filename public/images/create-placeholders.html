@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Placeholder Images</title>
+</head>
+<body>
+    <h1>Generating placeholder images...</h1>
+    <script>
+        // Create placeholder images using canvas
+        const images = [
+            { name: 'hero.jpg', width: 2560, height: 1440, text: 'HERO IMAGE' },
+            { name: 'featured-1.jpg', width: 1920, height: 1080, text: 'Featured 1' },
+            { name: 'featured-2.jpg', width: 1200, height: 1600, text: 'Featured 2' },
+            { name: 'featured-3.jpg', width: 1600, height: 1200, text: 'Featured 3' },
+            { name: 'featured-4.jpg', width: 1200, height: 1600, text: 'Featured 4' },
+            { name: 'featured-5.jpg', width: 1920, height: 1080, text: 'Featured 5' },
+            { name: 'featured-6.jpg', width: 1920, height: 1080, text: 'Featured 6' },
+            { name: 'portfolio-1.jpg', width: 1920, height: 1440, text: 'Portfolio 1' },
+            { name: 'portfolio-2.jpg', width: 1920, height: 1440, text: 'Portfolio 2' },
+            { name: 'portfolio-3.jpg', width: 1920, height: 1440, text: 'Portfolio 3' },
+            { name: 'portfolio-4.jpg', width: 1920, height: 1440, text: 'Portfolio 4' },
+            { name: 'portfolio-5.jpg', width: 1920, height: 1440, text: 'Portfolio 5' },
+            { name: 'portfolio-6.jpg', width: 1920, height: 1440, text: 'Portfolio 6' },
+            { name: 'about-portrait.jpg', width: 1200, height: 1600, text: 'About' },
+            { name: 'contact-bg.jpg', width: 2560, height: 1440, text: 'Contact BG' },
+            { name: 'story-hero.jpg', width: 2560, height: 1280, text: 'Story Hero' },
+            { name: 'story-support-1.jpg', width: 1200, height: 1500, text: 'Story 1' },
+            { name: 'story-support-2.jpg', width: 1200, height: 1500, text: 'Story 2' },
+            { name: 'closing-cta.jpg', width: 2560, height: 1440, text: 'CTA' },
+            { name: 'species-birds.jpg', width: 800, height: 800, text: 'Birds' },
+            { name: 'species-mammals.jpg', width: 800, height: 800, text: 'Mammals' },
+            { name: 'species-macro.jpg', width: 800, height: 800, text: 'Macro' },
+            { name: 'species-landscapes.jpg', width: 800, height: 800, text: 'Landscapes' },
+            { name: 'species-moments.jpg', width: 800, height: 800, text: 'Moments' },
+            { name: 'story-vedanthangal.jpg', width: 1920, height: 1200, text: 'Vedanthangal' },
+            { name: 'story-pulicat.jpg', width: 1920, height: 1200, text: 'Pulicat' },
+            { name: 'story-bandipur.jpg', width: 1920, height: 1200, text: 'Bandipur' },
+            { name: 'story-mudumalai.jpg', width: 1920, height: 1200, text: 'Mudumalai' },
+            { name: 'story-nilgiris.jpg', width: 1920, height: 1200, text: 'Nilgiris' },
+            { name: 'species-painted-stork-1.jpg', width: 1200, height: 1500, text: 'Painted Stork' },
+            { name: 'species-painted-stork-2.jpg', width: 1200, height: 1500, text: 'Painted Stork 2' },
+            { name: 'species-elephant-1.jpg', width: 1200, height: 1500, text: 'Elephant' },
+            { name: 'species-elephant-2.jpg', width: 1200, height: 1500, text: 'Elephant 2' },
+            { name: 'species-kingfisher-1.jpg', width: 1200, height: 1500, text: 'Kingfisher' },
+            { name: 'species-kingfisher-2.jpg', width: 1200, height: 1500, text: 'Kingfisher 2' }
+        ];
+
+        document.write('<p>Instructions: Open this file in a browser, then right-click each image below and "Save As" to the images folder.</p>');
+
+        images.forEach(img => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            
+            // Dark background
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${Math.min(canvas.width / 10, 100)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(img.text, canvas.width / 2, canvas.height / 2);
+            
+            const imgElement = document.createElement('img');
+            imgElement.src = canvas.toDataURL('image/jpeg', 0.9);
+            imgElement.style.maxWidth = '300px';
+            imgElement.style.margin = '10px';
+            imgElement.title = img.name;
+            
+            const link = document.createElement('a');
+            link.href = imgElement.src;
+            link.download = img.name;
+            link.appendChild(imgElement);
+            
+            const label = document.createElement('p');
+            label.textContent = img.name;
+            
+            document.body.appendChild(label);
+            document.body.appendChild(link);
+            document.body.appendChild(document.createElement('br'));
+        });
+    </script>
+</body>
+</html>
