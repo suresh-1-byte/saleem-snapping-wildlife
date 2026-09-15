@@ -103,39 +103,6 @@ export default function Hero() {
           }}
         >
 
-          {/* LEFT ANTLER */}
-          <svg
-            viewBox="0 0 120 180"
-            className="
-              absolute
-              left-[7%]
-              sm:left-[9%]
-              md:left-[12%]
-              lg:left-[14%]
-              -top-5
-              sm:-top-7
-              md:-top-10
-              w-16
-              sm:w-20
-              md:w-24
-              lg:w-28
-              text-[#eee5d0]
-              z-20
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="5"
-            strokeLinecap="round"
-          >
-            <path d="M58 175 C56 140 55 110 56 82 C56 53 43 25 18 8" />
-            <path d="M55 105 C37 93 22 75 15 54" />
-            <path d="M55 82 C72 70 82 50 84 29" />
-            <path d="M56 65 C45 50 39 31 40 13" />
-            <path d="M56 125 C72 116 88 101 98 81" />
-            <path d="M56 145 C69 138 82 126 88 112" />
-          </svg>
-
-
           {/* WILDLIFE */}
           <span
             className={`
@@ -567,66 +534,6 @@ export default function Hero() {
 
       </motion.main>
 
-
-      {/* =========================================================
-          SCROLL
-      ========================================================= */}
-
-      <motion.div
-        className="
-          absolute
-          bottom-6
-          md:bottom-8
-          left-1/2
-          -translate-x-1/2
-          z-20
-          flex
-          flex-col
-          items-center
-          gap-2
-        "
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoaded ? 0.7 : 0 }}
-        transition={{
-          delay: 1.7,
-          duration: 1,
-        }}
-      >
-
-        <motion.div
-          className="
-            w-px
-            h-12
-            md:h-16
-            bg-gradient-to-b
-            from-transparent
-            via-[#eee5d0]
-            to-transparent
-          "
-          animate={{
-            opacity: [0.3, 0.9, 0.3],
-            scaleY: [0.8, 1, 0.8],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-
-        <span
-          className={`
-            ${cormorant.className}
-            text-[10px]
-            uppercase
-            tracking-[0.3em]
-            text-[#eee5d0]/60
-          `}
-        >
-          Scroll
-        </span>
-
-      </motion.div>
 
     </section>
   );
