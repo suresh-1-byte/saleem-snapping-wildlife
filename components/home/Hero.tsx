@@ -388,35 +388,6 @@ export default function Hero() {
 
             NS.
 
-
-            {/* CURVED BRANCH UNDER L - Moved down more on mobile */}
-            <svg
-              viewBox="0 0 180 70"
-              className="
-                absolute
-                left-[0%]
-                bottom-[-25%]
-                sm:bottom-[-15%]
-                md:bottom-[-12%]
-                w-20
-                sm:w-32
-                md:w-40
-                text-[#eee5d0]
-                opacity-80
-                sm:opacity-100
-              "
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="4"
-              strokeLinecap="round"
-            >
-              <path d="M5 18 C42 47 91 56 166 42" />
-
-              <path d="M65 50 C58 37 46 31 35 30" />
-
-              <path d="M103 52 C107 39 117 30 129 27" />
-            </svg>
-
           </span>
 
         </motion.div>
