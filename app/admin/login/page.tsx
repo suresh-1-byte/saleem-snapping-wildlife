@@ -99,10 +99,6 @@ export default function AdminLogin() {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-xs text-white/40">
-          Default credentials: admin / admin123
-        </div>
       </div>
     </div>
   );

@@ -12,10 +12,12 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
 
+    console.log('Login attempt:', { username, envUser: ADMIN_CREDENTIALS.username });
+
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       const token = await createToken(username);
       
-      const cookieStore = await cookies();
+      const cookieStore = cookies();
       cookieStore.set('admin_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
