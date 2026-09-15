@@ -48,9 +48,12 @@ export default function Hero() {
           alt="Wildlife photographer capturing a moment in nature"
           fill
           priority
-          sizes="100vw"
-          quality={95}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          quality={100}
           className="object-cover object-[30%_center] sm:object-center"
+          style={{
+            imageRendering: '-webkit-optimize-contrast',
+          }}
         />
 
         {/* Main dark overlay */}

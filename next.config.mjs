@@ -5,12 +5,16 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'inline',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Higher quality for all devices
+    unoptimized: false,
   },
-  reactStrictMode: false, // Disabled to prevent double-render performance issues in dev
+  reactStrictMode: false,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Note: optimizeCss: true requires 'critters' package - removed to prevent errors
 };
 
 export default nextConfig;

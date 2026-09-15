@@ -40,6 +40,16 @@
     image-rendering: auto;
   }
 
+  /* Force high quality on mobile */
+  @media (max-width: 768px) {
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      -webkit-backface-visibility: hidden;
+      -webkit-transform: translateZ(0) scale(1, 1);
+      transform: translateZ(0);
+    }
+  }
+
   /* Hardware acceleration only for actively animating elements */
   .animate-fadeInUp,
   .animate-fadeIn,
