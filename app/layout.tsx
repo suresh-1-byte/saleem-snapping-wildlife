@@ -26,6 +26,12 @@ export const metadata: Metadata = {
   description: "Wildlife photography from Chennai, India. Birds, mammals, landscapes and the quiet moments that often go unnoticed in the wild.",
   keywords: ["wildlife photography", "Chennai photographer", "bird photography", "mammal photography", "South India wildlife"],
   authors: [{ name: "Saleem Snapping" }],
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
   openGraph: {
     title: "Saleem Snapping | Wildlife Photography",
     description: "Wildlife photography from Chennai, India. Birds, mammals, landscapes and the quiet moments that often go unnoticed in the wild.",

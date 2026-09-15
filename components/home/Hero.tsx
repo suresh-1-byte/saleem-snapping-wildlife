@@ -49,8 +49,8 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          quality={85}
-          className="object-cover object-center"
+          quality={95}
+          className="object-cover object-[30%_center] sm:object-center"
         />
 
         {/* Main dark overlay */}
@@ -156,42 +156,22 @@ export default function Hero() {
               drop-shadow-[0_7px_12px_rgba(0,0,0,0.65)]
             `}
           >
-            WILDLIFE
-
-            {/* TREE INSIDE WORD */}
-            <svg
-              viewBox="0 0 100 150"
-              className="
-                absolute
-                left-[51%]
-                top-[5%]
-                -translate-x-1/2
-                w-8
-                sm:w-10
-                md:w-12
-                lg:w-14
-                h-auto
-                text-[#151810]
-              "
-              fill="currentColor"
-            >
-              <path d="M46 148h9V94h-9z" />
-
-              <path d="
-                M50 4
-                L31 38
-                H40
-                L22 66
-                H39
-                L17 96
-                H83
-                L61 66
-                H78
-                L60 38
-                H69
-                Z
-              " />
-            </svg>
+            {/* W - Rye font (old/default) */}
+            W
+            {/* I - Cormorant font (new) */}
+            <span className={cormorant.className}>I</span>
+            {/* L - Cormorant font (new) */}
+            <span className={cormorant.className}>L</span>
+            {/* D - Rye font (old/default) */}
+            D
+            {/* L - Rye font (old/default) */}
+            L
+            {/* I - Cormorant font (new) */}
+            <span className={cormorant.className}>I</span>
+            {/* F - Cormorant font (new) */}
+            <span className={cormorant.className}>F</span>
+            {/* E - Rye font (old/default) */}
+            E
 
 
             {/* FLYING BIRD */}
@@ -229,39 +209,6 @@ export default function Hero() {
             </motion.svg>
           </span>
 
-
-          {/* RIGHT ANTLER */}
-          <svg
-            viewBox="0 0 120 180"
-            className="
-              absolute
-              right-[7%]
-              sm:right-[9%]
-              md:right-[12%]
-              lg:right-[14%]
-              -top-5
-              sm:-top-7
-              md:-top-10
-              w-16
-              sm:w-20
-              md:w-24
-              lg:w-28
-              text-[#eee5d0]
-              z-20
-              scale-x-[-1]
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="5"
-            strokeLinecap="round"
-          >
-            <path d="M58 175 C56 140 55 110 56 82 C56 53 43 25 18 8" />
-            <path d="M55 105 C37 93 22 75 15 54" />
-            <path d="M55 82 C72 70 82 50 84 29" />
-            <path d="M56 65 C45 50 39 31 40 13" />
-            <path d="M56 125 C72 116 88 101 98 81" />
-            <path d="M56 145 C69 138 82 126 88 112" />
-          </svg>
 
         </motion.div>
 
@@ -475,17 +422,21 @@ export default function Hero() {
             NS.
 
 
-            {/* CURVED BRANCH UNDER L */}
+            {/* CURVED BRANCH UNDER L - Moved down more on mobile */}
             <svg
               viewBox="0 0 180 70"
               className="
                 absolute
                 left-[0%]
-                bottom-[-12%]
-                w-28
+                bottom-[-25%]
+                sm:bottom-[-15%]
+                md:bottom-[-12%]
+                w-20
                 sm:w-32
                 md:w-40
                 text-[#eee5d0]
+                opacity-80
+                sm:opacity-100
               "
               fill="none"
               stroke="currentColor"

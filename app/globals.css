@@ -12,12 +12,32 @@
   html {
     scroll-behavior: auto; /* Disable for better GSAP control */
     overflow-x: hidden;
+    /* High quality rendering */
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     @apply bg-black text-white font-sans antialiased;
     font-feature-settings: "kern" 1, "liga" 1;
     overflow-x: hidden;
+    /* Crisp rendering on mobile */
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* High quality image rendering */
+  img,
+  picture,
+  video {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: bicubic;
+  }
+
+  /* Next.js Image component optimization */
+  img[loading="lazy"] {
+    image-rendering: auto;
   }
 
   /* Hardware acceleration only for actively animating elements */
