@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useCloudinaryImages } from "@/lib/useCloudinaryImages";
 import AnimatedSection from "@/components/AnimatedSection";
 import { ButterDoodle, LeafDoodle } from "@/components/Doodles";
 import AdaptiveWatermarkImage from "@/components/AdaptiveWatermarkImage";
