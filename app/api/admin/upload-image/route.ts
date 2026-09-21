@@ -27,22 +27,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
     }
 
-    // Check for Blob token
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!token) {
-      console.error('BLOB_READ_WRITE_TOKEN is not set');
-      return NextResponse.json({ 
-        error: 'Blob storage not configured',
-        details: 'BLOB_READ_WRITE_TOKEN environment variable is missing'
-      }, { status: 500 });
-    }
+    console.log('Attempting Blob upload:', {
+      path: relativePath,
+      fileSize: file.size,
+      hasStoreId: !!process.env.BLOB_STORE_ID,
+      storeId: process.env.BLOB_STORE_ID?.substring(0, 10) + '...',
+    });
 
     // Upload to Vercel Blob Storage
+    // The SDK will automatically use BLOB_STORE_ID from environment
     const blob = await put(relativePath, file, {
       access: 'public',
       addRandomSuffix: false,
-      token: token,
     });
+
+    console.log('Blob upload successful:', blob.url);
 
     return NextResponse.json({ success: true, path: blob.url });
   } catch (error) {
@@ -67,18 +66,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'No image URL provided' }, { status: 400 });
     }
 
-    // Check for Blob token
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!token) {
-      console.error('BLOB_READ_WRITE_TOKEN is not set');
-      return NextResponse.json({ 
-        error: 'Blob storage not configured',
-        details: 'BLOB_READ_WRITE_TOKEN environment variable is missing'
-      }, { status: 500 });
-    }
+    console.log('Attempting Blob delete:', imageUrl);
 
     // Delete from Vercel Blob Storage
-    await del(imageUrl, { token: token });
+    // The SDK will automatically use BLOB_STORE_ID from environment
+    await del(imageUrl);
+    
+    console.log('Blob delete successful');
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
