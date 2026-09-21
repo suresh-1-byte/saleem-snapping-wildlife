@@ -115,12 +115,13 @@ export default function ImagesManager() {
           body: formData,
         });
 
+        const data = await res.json();
+        
         if (res.ok) {
-          setMessage(`✓ ${imageKey} updated successfully!`);
-          // Force reload the image
-          window.location.reload();
+          setMessage(`✓ ${imageKey} updated successfully! URL: ${data.path}`);
+          // Reload after 2 seconds to show new image
+          setTimeout(() => window.location.reload(), 2000);
         } else {
-          const data = await res.json().catch(() => ({}));
           setMessage(`✗ Failed to upload ${imageKey}: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
@@ -196,11 +197,12 @@ export default function ImagesManager() {
           body: formData,
         });
 
+        const data = await res.json();
+        
         if (res.ok) {
-          setMessage(`✓ New ${prefix} photo added successfully!`);
-          window.location.reload();
+          setMessage(`✓ New ${prefix} photo added successfully! URL: ${data.path}`);
+          setTimeout(() => window.location.reload(), 2000);
         } else {
-          const data = await res.json().catch(() => ({}));
           setMessage(`✗ Failed to add new ${prefix} photo: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
