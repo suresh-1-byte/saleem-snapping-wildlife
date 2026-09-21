@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unlink, writeFile } from 'fs/promises';
-import path from 'path';
+import { put, del } from '@vercel/blob';
 import { isAuthenticated } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
@@ -28,22 +27,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
     }
 
-    const publicRoot = path.resolve(process.cwd(), 'public');
-    const publicPath = path.resolve(publicRoot, relativePath);
-    if (!publicPath.startsWith(`${publicRoot}${path.sep}`)) {
-      return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
-    }
+    // Upload to Vercel Blob Storage
+    const blob = await put(relativePath, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Save to the specified path
-    await writeFile(publicPath, buffer);
-
-    return NextResponse.json({ success: true, path: `/${relativePath}` });
+    return NextResponse.json({ success: true, path: blob.url });
   } catch (error) {
     console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Upload failed', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 }
 
@@ -54,30 +50,20 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const imagePath = new URL(request.url).searchParams.get('imagePath');
-    if (!imagePath) {
-      return NextResponse.json({ error: 'No image path provided' }, { status: 400 });
+    const imageUrl = new URL(request.url).searchParams.get('imagePath');
+    if (!imageUrl) {
+      return NextResponse.json({ error: 'No image URL provided' }, { status: 400 });
     }
 
-    const relativePath = decodeURIComponent(imagePath).replace(/^[/\\]+/, '');
-    if (!relativePath.startsWith('images/')) {
-      return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
-    }
-
-    const publicRoot = path.resolve(process.cwd(), 'public');
-    const publicPath = path.resolve(publicRoot, relativePath);
-    if (!publicPath.startsWith(`${publicRoot}${path.sep}`)) {
-      return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
-    }
-
-    await unlink(publicPath);
+    // Delete from Vercel Blob Storage
+    await del(imageUrl);
+    
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    if (error?.code === 'ENOENT') {
-      return NextResponse.json({ error: 'Image not found' }, { status: 404 });
-    }
-
     console.error('Delete error:', error);
-    return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Delete failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
