@@ -17,7 +17,7 @@ export async function getPublicImages(prefix: string) {
         type: 'upload',
         prefix: `images/${prefix}-`,
         max_results: 100,
-      });
+      }, { cache: false }); // Disable Cloudinary caching
 
       if (result.resources && result.resources.length > 0) {
         return result.resources

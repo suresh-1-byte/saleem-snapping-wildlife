@@ -8,6 +8,10 @@ import ClosingCTA from "@/components/home/ClosingCTA";
 import { getPublicImages } from "@/lib/images";
 import { getStories } from "@/lib/content";
 
+// Disable caching to always show latest images
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Home() {
   const featuredImages = await getPublicImages("featured");
   const stories = await getStories();

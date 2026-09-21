@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -61,6 +62,14 @@ export async function POST(request: NextRequest) {
 
     console.log('Cloudinary upload successful:', result.secure_url);
 
+    // Revalidate all pages that use images
+    revalidatePath('/', 'layout');
+    revalidatePath('/wildlife');
+    revalidatePath('/species');
+    revalidatePath('/stories');
+    revalidatePath('/about');
+    revalidatePath('/contact');
+
     return NextResponse.json({ 
       success: true, 
       path: result.secure_url,
@@ -93,6 +102,14 @@ export async function DELETE(request: NextRequest) {
     await cloudinary.uploader.destroy(publicId);
     
     console.log('Cloudinary delete successful');
+    
+    // Revalidate all pages that use images
+    revalidatePath('/', 'layout');
+    revalidatePath('/wildlife');
+    revalidatePath('/species');
+    revalidatePath('/stories');
+    revalidatePath('/about');
+    revalidatePath('/contact');
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
