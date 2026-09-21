@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import imageCompression from 'browser-image-compression';
 
 interface ImageItem {
   key: string;
@@ -95,8 +96,18 @@ export default function ImagesManager() {
       setMessage("");
 
       try {
+        // Compress image before upload to avoid 413 errors
+        const options = {
+          maxSizeMB: 3, // Max 3MB
+          maxWidthOrHeight: 2400, // Max dimension
+          useWebWorker: true,
+          fileType: file.type,
+        };
+        
+        const compressedFile = await imageCompression(file, options);
+        
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", compressedFile);
         formData.append("imagePath", imagePath);
 
         const res = await fetch("/api/admin/upload-image", {
@@ -109,10 +120,11 @@ export default function ImagesManager() {
           // Force reload the image
           window.location.reload();
         } else {
-          setMessage(`✗ Failed to upload ${imageKey}`);
+          const data = await res.json().catch(() => ({}));
+          setMessage(`✗ Failed to upload ${imageKey}: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
-        setMessage(`✗ Error uploading ${imageKey}`);
+        setMessage(`✗ Error uploading ${imageKey}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } finally {
         setUploading(null);
       }
@@ -165,8 +177,18 @@ export default function ImagesManager() {
       setMessage("");
 
       try {
+        // Compress image before upload
+        const options = {
+          maxSizeMB: 3, // Max 3MB
+          maxWidthOrHeight: 2400, // Max dimension
+          useWebWorker: true,
+          fileType: file.type,
+        };
+        
+        const compressedFile = await imageCompression(file, options);
+        
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", compressedFile);
         formData.append("imagePath", imagePath);
 
         const res = await fetch("/api/admin/upload-image", {
@@ -178,10 +200,11 @@ export default function ImagesManager() {
           setMessage(`✓ New ${prefix} photo added successfully!`);
           window.location.reload();
         } else {
-          setMessage(`✗ Failed to add new ${prefix} photo`);
+          const data = await res.json().catch(() => ({}));
+          setMessage(`✗ Failed to add new ${prefix} photo: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
-        setMessage(`✗ Error adding new ${prefix} photo`);
+        setMessage(`✗ Error adding new ${prefix} photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } finally {
         setUploading(null);
       }
