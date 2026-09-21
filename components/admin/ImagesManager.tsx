@@ -11,6 +11,10 @@ interface ImageItem {
   description: string;
 }
 
+interface CloudinaryImages {
+  [key: string]: string;
+}
+
 const IMAGE_CATEGORIES = [
   {
     category: "Hero & Backgrounds",
@@ -82,6 +86,26 @@ export default function ImagesManager() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [cloudinaryImages, setCloudinaryImages] = useState<CloudinaryImages>({});
+
+  // Fetch Cloudinary images on mount
+  useEffect(() => {
+    fetch('/api/admin/images')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.images) {
+          setCloudinaryImages(data.images);
+        }
+      })
+      .catch(err => console.error('Failed to fetch Cloudinary images:', err));
+  }, []);
+
+  // Helper to get the actual image URL (Cloudinary if available, otherwise local)
+  const getImageUrl = (path: string): string => {
+    // Remove file extension and try to match
+    const pathWithoutExt = path.replace(/\.[^/.]+$/, '');
+    return cloudinaryImages[pathWithoutExt] || path;
+  };
 
   async function handleImageUpload(imageKey: string, imagePath: string) {
     const input = document.createElement("input");
@@ -118,9 +142,9 @@ export default function ImagesManager() {
         const data = await res.json();
         
         if (res.ok) {
-          setMessage(`✓ ${imageKey} updated successfully! URL: ${data.path}`);
-          // Reload after 2 seconds to show new image
-          setTimeout(() => window.location.reload(), 2000);
+          setMessage(`✓ ${imageKey} updated successfully! Reloading...`);
+          // Reload to fetch new Cloudinary URL
+          setTimeout(() => window.location.reload(), 1500);
         } else {
           setMessage(`✗ Failed to upload ${imageKey}: ${data.error || 'Unknown error'}`);
         }
@@ -251,7 +275,7 @@ export default function ImagesManager() {
               >
                 <div className="relative aspect-video bg-black">
                   <Image
-                    src={image.path}
+                    src={getImageUrl(image.path)}
                     alt={image.label}
                     fill
                     className="object-cover"
