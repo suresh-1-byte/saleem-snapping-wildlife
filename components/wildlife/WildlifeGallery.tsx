@@ -83,10 +83,10 @@ export default function WildlifeGallery({ images }: { images: string[] }) {
         
         {/* Gallery Title Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-5xl font-serif tracking-widest uppercase mb-2">
+          <h2 className={`${caveat.className} text-3xl md:text-5xl font-semibold tracking-wide mb-2 text-stone-200`}>
             The Wild, As I See It.
           </h2>
-          <p className="text-stone-400 text-sm md:text-base italic">
+          <p className={`${caveat.className} text-stone-400 text-xl md:text-2xl font-medium`}>
             Wildlife Moments
           </p>
         </div>

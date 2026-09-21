@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'admin').trim();
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'admin123').trim();
+
 const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production-123456789'
 );
@@ -12,10 +15,9 @@ export async function POST(request: NextRequest) {
     const username = body.username?.trim();
     const password = body.password?.trim();
 
-    console.log('Login attempt:', { username, passwordLength: password?.length });
+    console.log('Login attempt:', { username, passwordLength: password?.length, expectedUsername: ADMIN_USERNAME, expectedPasswordLength: ADMIN_PASSWORD.length });
 
-    // Simple hardcoded check - always works
-    if (username === 'admin' && password === 'admin123') {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       console.log('✅ Credentials match! Creating token...');
       
       // Create JWT token

@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
 const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
+  process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production-123456789'
 );
 
 export async function createToken(username: string) {
