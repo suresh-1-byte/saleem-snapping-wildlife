@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Rye, Cormorant_Garamond } from "next/font/google";
-import { useCloudinaryImages } from "@/lib/useCloudinaryImages";
 
 const rye = Rye({
   weight: "400",
@@ -19,7 +18,6 @@ const cormorant = Cormorant_Garamond({
 
 export default function Hero() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const { getImageUrl } = useCloudinaryImages();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -46,7 +44,7 @@ export default function Hero() {
         }}
       >
         <Image
-          src={getImageUrl("/images/hero%20pg")}
+          src="/images/hero%20pg.png"
           alt="Wildlife photographer capturing a moment in nature"
           fill
           priority

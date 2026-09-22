@@ -3,12 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useCloudinaryImages } from "@/lib/useCloudinaryImages";
 import AnimatedSection from "@/components/AnimatedSection";
 import { BirdDoodle, FeatherDoodle, CameraDoodle } from "@/components/Doodles";
 
 export default function ClosingCTA() {
-  const { getImageUrl } = useCloudinaryImages();
   
   return (
     <section className="relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden">
@@ -21,12 +19,13 @@ export default function ClosingCTA() {
         transition={{ duration: 2, ease: "easeOut" }}
       >
         <Image
-          src={getImageUrl("/images/closing-cta")}
+          src="/images/closing-cta.jpg"
           alt="Final cinematic wildlife image"
           fill
           className="object-cover"
           sizes="100vw"
           unoptimized
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
       </motion.div>

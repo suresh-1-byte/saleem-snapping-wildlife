@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/contact/ContactForm";
-import CloudinaryBackground from "@/components/CloudinaryBackground";
+import Image from "next/image";
 import AnimatedSection from "@/components/AnimatedSection";
 import { LeafDoodle } from "@/components/Doodles";
 
@@ -18,11 +18,18 @@ export default function ContactPage() {
     <>
       <div className="relative min-h-screen overflow-hidden">
         {/* Background Image */}
-        <CloudinaryBackground
-          src="/images/contact-bg"
-          alt="Misty forest landscape"
-          overlay="absolute inset-0 bg-black/70"
-        />
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/contact-bg.jpg"
+            alt="Misty forest landscape"
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
+            unoptimized
+          />
+          <div className="absolute inset-0 bg-black/70" />
+        </div>
 
         <LeafDoodle className="absolute top-1/4 left-10 w-24 h-24 text-earthy-green z-10 hidden lg:block" />
 
