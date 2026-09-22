@@ -20,15 +20,21 @@ export default function WildlifeManager() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   
-  // Form state
-  const [showForm, setShowForm] = useState(false);
+  // Form state for ADD
+  const [showAddForm, setShowAddForm] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // Form state for EDIT
+  const [editTitle, setEditTitle] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editCategories, setEditCategories] = useState<string[]>([]);
 
   // Fetch images
   useEffect(() => {
@@ -36,10 +42,12 @@ export default function WildlifeManager() {
   }, []);
 
   async function fetchImages() {
+    setLoading(true);
     try {
       const res = await fetch('/api/admin/portfolio');
       const data = await res.json();
       if (data.success) {
+        console.log('Fetched images from Cloudinary:', data.images);
         setImages(data.images);
       }
     } catch (error) {
@@ -76,7 +84,52 @@ export default function WildlifeManager() {
     setTitle("");
     setLocation("");
     setSelectedCategories([]);
-    setShowForm(false);
+    setShowAddForm(false);
+  }
+
+  function startEdit(image: WildlifeImage) {
+    setEditing(image.id);
+    setEditTitle(image.title);
+    setEditLocation(image.location);
+    setEditCategories(image.category);
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setEditTitle("");
+    setEditLocation("");
+    setEditCategories([]);
+  }
+
+  async function saveEdit(imageId: string) {
+    if (!editTitle || !editLocation || editCategories.length === 0) {
+      setMessage("✗ Please fill all fields");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/portfolio/${imageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editTitle,
+          location: editLocation,
+          categories: editCategories.join(', '),
+        }),
+      });
+
+      if (res.ok) {
+        setMessage(`✓ Updated successfully!`);
+        cancelEdit();
+        fetchImages();
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        const data = await res.json();
+        setMessage(`✗ ${data.error || 'Failed to update'}`);
+      }
+    } catch (error) {
+      setMessage('✗ Error updating image');
+    }
   }
 
   async function handleUpload() {
@@ -173,14 +226,14 @@ export default function WildlifeManager() {
         <div>
           <h2 className="text-2xl font-bold tracking-wider mb-2">WILDLIFE GALLERY</h2>
           <p className="text-white/60">
-            {images.length} {images.length === 1 ? 'image' : 'images'} • Displayed on Wildlife page
+            {images.length} {images.length === 1 ? 'image' : 'images'} • Shown on Wildlife page
           </p>
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => setShowAddForm(!showAddForm)}
           className="px-6 py-3 bg-earthy-green hover:bg-earthy-green-light text-white font-medium tracking-wide rounded transition-colors"
         >
-          {showForm ? "✕ Cancel" : "+ Add New Image"}
+          {showAddForm ? "✕ Cancel" : "+ Add Image"}
         </button>
       </div>
 
@@ -196,7 +249,7 @@ export default function WildlifeManager() {
       )}
 
       {/* Upload Form */}
-      {showForm && (
+      {showAddForm && (
         <div className="bg-charcoal border border-white/20 rounded-lg p-6 space-y-5">
           <h3 className="text-xl font-semibold mb-4 text-earthy-green-light">Add New Wildlife Image</h3>
           
@@ -291,7 +344,7 @@ export default function WildlifeManager() {
         {images.map((image) => (
           <div
             key={image.id}
-            className="bg-charcoal border border-white/10 rounded-lg overflow-hidden hover:border-earthy-green/50 transition-all hover:shadow-xl hover:shadow-earthy-green/10"
+            className="bg-charcoal border border-white/10 rounded-lg overflow-hidden hover:border-earthy-green/50 transition-all"
           >
             <div className="relative aspect-square bg-black">
               <Image
@@ -302,41 +355,109 @@ export default function WildlifeManager() {
                 unoptimized
               />
             </div>
+            
+            {/* Image Details or Edit Form */}
             <div className="p-4 space-y-3">
-              <div>
-                <h4 className="font-semibold text-lg">{image.title}</h4>
-                <p className="text-sm text-white/60 mt-1">{image.location}</p>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {image.category.map(cat => (
-                    <span key={cat} className="text-xs px-2 py-1 bg-earthy-green/20 text-earthy-green-light rounded">
-                      {cat}
-                    </span>
-                  ))}
+              {editing === image.id ? (
+                // EDIT MODE
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Title"
+                    className="w-full px-3 py-2 bg-black border border-white/20 rounded text-white text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    placeholder="Location"
+                    className="w-full px-3 py-2 bg-black border border-white/20 rounded text-white text-sm"
+                  />
+                  <div className="flex flex-wrap gap-1">
+                    {CATEGORY_OPTIONS.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          if (editCategories.includes(cat)) {
+                            setEditCategories(editCategories.filter(c => c !== cat));
+                          } else {
+                            setEditCategories([...editCategories, cat]);
+                          }
+                        }}
+                        className={`text-xs px-2 py-1 rounded ${
+                          editCategories.includes(cat)
+                            ? "bg-earthy-green text-white"
+                            : "bg-black border border-white/20 text-white/60"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => saveEdit(image.id)}
+                      className="px-3 py-2 bg-earthy-green hover:bg-earthy-green-light text-white text-sm font-medium rounded transition-colors"
+                    >
+                      ✓ Save
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded transition-colors"
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-white/40 mt-2">
-                  Added {new Date(image.uploadedAt).toLocaleDateString()}
-                </p>
-              </div>
-              <button
-                onClick={() => handleDelete(image.id, image.title)}
-                disabled={deleting === image.id}
-                className="w-full px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 text-sm font-medium tracking-wide rounded transition-colors disabled:opacity-50"
-              >
-                {deleting === image.id ? "Deleting..." : "🗑️ Delete"}
-              </button>
+              ) : (
+                // VIEW MODE
+                <>
+                  <div>
+                    <h4 className="font-semibold text-lg">{image.title}</h4>
+                    <p className="text-sm text-white/60 mt-1">{image.location}</p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {image.category.map(cat => (
+                        <span key={cat} className="text-xs px-2 py-1 bg-earthy-green/20 text-earthy-green-light rounded">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-white/40 mt-2">
+                      Added {new Date(image.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => startEdit(image)}
+                      className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 text-sm font-medium tracking-wide rounded transition-colors"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(image.id, image.title)}
+                      disabled={deleting === image.id}
+                      className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 text-sm font-medium tracking-wide rounded transition-colors disabled:opacity-50"
+                    >
+                      {deleting === image.id ? "Deleting..." : "🗑️ Delete"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
       {/* Empty State */}
-      {images.length === 0 && !showForm && (
+      {images.length === 0 && !showAddForm && (
         <div className="text-center py-16 border-2 border-dashed border-white/10 rounded-lg">
           <div className="text-6xl mb-4">📸</div>
           <h3 className="text-xl font-semibold mb-2">No wildlife images yet</h3>
           <p className="text-white/60 mb-6">Start building your wildlife gallery</p>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => setShowAddForm(true)}
             className="px-6 py-3 bg-earthy-green hover:bg-earthy-green-light text-white font-medium tracking-wide rounded transition-colors"
           >
             + Add First Image

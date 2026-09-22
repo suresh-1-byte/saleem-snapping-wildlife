@@ -8,7 +8,7 @@ import FeaturedManager from "./FeaturedManager";
 import StoriesManager from "./StoriesManager";
 import SpeciesManager from "./SpeciesManager";
 
-type Tab = "wildlife" | "featured" | "images" | "stories" | "species";
+type Tab = "wildlife" | "images" | "featured" | "stories" | "species";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("wildlife");
@@ -63,6 +63,16 @@ export default function AdminDashboard() {
               🦅 WILDLIFE
             </button>
             <button
+              onClick={() => setActiveTab("images")}
+              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+                activeTab === "images"
+                  ? "bg-earthy-green text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              📸 IMAGES
+            </button>
+            <button
               onClick={() => setActiveTab("featured")}
               className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "featured"
@@ -71,16 +81,6 @@ export default function AdminDashboard() {
               }`}
             >
               ⭐ FEATURED
-            </button>
-            <button
-              onClick={() => setActiveTab("images")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
-                activeTab === "images"
-                  ? "bg-earthy-green text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              📸 BACKGROUNDS
             </button>
             <button
               onClick={() => setActiveTab("stories")}
@@ -109,8 +109,8 @@ export default function AdminDashboard() {
       {/* Content */}
       <div className="container-padding py-8">
         {activeTab === "wildlife" && <WildlifeManager />}
-        {activeTab === "featured" && <FeaturedManager />}
         {activeTab === "images" && <ImagesManager />}
+        {activeTab === "featured" && <FeaturedManager />}
         {activeTab === "stories" && <StoriesManager />}
         {activeTab === "species" && <SpeciesManager />}
       </div>
