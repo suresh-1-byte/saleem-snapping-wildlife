@@ -18,9 +18,23 @@ const cormorant = Cormorant_Garamond({
 
 export default function Hero() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [heroBg, setHeroBg] = useState("/images/hero%20pg.png");
 
   useEffect(() => {
     setIsLoaded(true);
+    
+    // Fetch the hero image from the images API
+    fetch('/api/admin/images')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.images) {
+          const heroUrl = data.images['/images/hero pg'] || data.images['/images/hero%20pg'] || data.images['/images/hero pg.png'];
+          if (heroUrl) {
+            setHeroBg(heroUrl);
+          }
+        }
+      })
+      .catch(err => console.error('Failed to fetch hero image:', err));
   }, []);
 
   return (
@@ -44,7 +58,7 @@ export default function Hero() {
         }}
       >
         <Image
-          src="/images/hero%20pg.png"
+          src={heroBg}
           alt="Wildlife photographer capturing a moment in nature"
           fill
           priority

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -7,6 +8,23 @@ import AnimatedSection from "@/components/AnimatedSection";
 import { BirdDoodle, FeatherDoodle, CameraDoodle } from "@/components/Doodles";
 
 export default function ClosingCTA() {
+  const [bgImage, setBgImage] = useState("/images/closing-cta.jpg");
+
+  useEffect(() => {
+    // Fetch the closing CTA image from the images API
+    fetch('/api/admin/images')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.images) {
+          // Look for closing-cta image in the returned images
+          const closingCtaUrl = data.images['/images/closing-cta'] || data.images['/images/closing-cta.jpg'];
+          if (closingCtaUrl) {
+            setBgImage(closingCtaUrl);
+          }
+        }
+      })
+      .catch(err => console.error('Failed to fetch closing CTA image:', err));
+  }, []);
   
   return (
     <section className="relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden">
@@ -19,7 +37,7 @@ export default function ClosingCTA() {
         transition={{ duration: 2, ease: "easeOut" }}
       >
         <Image
-          src="/images/closing-cta.jpg"
+          src={bgImage}
           alt="Final cinematic wildlife image"
           fill
           className="object-cover"
