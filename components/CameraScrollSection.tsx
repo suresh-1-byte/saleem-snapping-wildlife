@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export default function CameraScrollSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [hasPlayed, setHasPlayed] = useState(false);
+  const [hasPlayedThisView, setHasPlayedThisView] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -16,21 +16,27 @@ export default function CameraScrollSection() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasPlayed) {
-            // Play video when section comes into view
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.9 && !hasPlayedThisView) {
+            // Play video when 90% of section is visible
+            video.currentTime = 0; // Reset to start
             video.play().catch((err) => console.log("Video play failed:", err));
-            setHasPlayed(true);
+            setHasPlayedThisView(true);
+          } else if (!entry.isIntersecting && hasPlayedThisView) {
+            // Reset when scrolled away
+            video.pause();
+            video.currentTime = 0;
+            setHasPlayedThisView(false);
           }
         });
       },
-      { threshold: 0.5 } // Trigger when 50% of section is visible
+      { threshold: [0, 0.9] } // Trigger at 0% and 90%
     );
 
     observer.observe(section);
 
-    // Reset hasPlayed when video ends
+    // Stop video after it finishes playing
     const handleVideoEnd = () => {
-      setHasPlayed(false);
+      video.pause();
     };
 
     video.addEventListener('ended', handleVideoEnd);
@@ -39,7 +45,7 @@ export default function CameraScrollSection() {
       observer.disconnect();
       video.removeEventListener('ended', handleVideoEnd);
     };
-  }, [hasPlayed]);
+  }, [hasPlayedThisView]);
 
   return (
     <div 
