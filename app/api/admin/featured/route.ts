@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import fs from 'fs/promises';
-import path from 'path';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -12,21 +10,31 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET || '',
 });
 
-const FEATURED_FILE = path.join(process.cwd(), 'data', 'featured.json');
-
-// GET - Fetch all featured images
+// GET - Fetch all featured images from Cloudinary
 export async function GET(request: NextRequest) {
   try {
-    const fileContent = await fs.readFile(FEATURED_FILE, 'utf-8');
-    const featuredData = JSON.parse(fileContent);
-    return NextResponse.json({ success: true, images: featuredData });
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: 'wildlife/featured',
+      max_results: 500,
+    });
+
+    const images = result.resources.map((resource: any) => ({
+      id: resource.public_id,
+      cloudinaryUrl: resource.secure_url,
+      cloudinaryPublicId: resource.public_id,
+      uploadedAt: resource.created_at,
+    }));
+
+    console.log(`Fetched ${images.length} featured images from Cloudinary`);
+    return NextResponse.json({ success: true, images });
   } catch (error) {
-    console.error('Error reading featured data:', error);
+    console.error('Error fetching featured data from Cloudinary:', error);
     return NextResponse.json({ success: true, images: [] });
   }
 }
 
-// POST - Add new featured image
+// POST - Add new featured image to Cloudinary
 export async function POST(request: NextRequest) {
   try {
     const authenticated = await isAuthenticated();
@@ -55,27 +63,12 @@ export async function POST(request: NextRequest) {
 
     console.log('Cloudinary upload successful:', result.secure_url);
 
-    // Read existing featured data
-    let featuredData = [];
-    try {
-      const fileContent = await fs.readFile(FEATURED_FILE, 'utf-8');
-      featuredData = JSON.parse(fileContent);
-    } catch (error) {
-      console.log('Creating new featured data file');
-    }
-
-    // Add new image
     const newImage = {
       id: result.public_id,
       cloudinaryUrl: result.secure_url,
       cloudinaryPublicId: result.public_id,
-      uploadedAt: new Date().toISOString(),
+      uploadedAt: result.created_at,
     };
-
-    featuredData.push(newImage);
-
-    // Save updated data
-    await fs.writeFile(FEATURED_FILE, JSON.stringify(featuredData, null, 2));
 
     // Revalidate pages
     revalidatePath('/');
@@ -93,7 +86,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Remove featured image
+// DELETE - Remove featured image from Cloudinary
 export async function DELETE(request: NextRequest) {
   try {
     const authenticated = await isAuthenticated();
@@ -108,31 +101,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Image ID required' }, { status: 400 });
     }
 
-    // Read featured data
-    const fileContent = await fs.readFile(FEATURED_FILE, 'utf-8');
-    const featuredData = JSON.parse(fileContent);
-
-    // Find image
-    const imageIndex = featuredData.findIndex((img: any) => img.id === imageId);
-    if (imageIndex === -1) {
-      return NextResponse.json({ error: 'Image not found' }, { status: 404 });
-    }
-
-    const image = featuredData[imageIndex];
+    console.log('Deleting from Cloudinary:', imageId);
 
     // Delete from Cloudinary
-    await cloudinary.uploader.destroy(image.cloudinaryPublicId);
+    const result = await cloudinary.uploader.destroy(imageId);
 
-    // Remove from data
-    featuredData.splice(imageIndex, 1);
-
-    // Save updated data
-    await fs.writeFile(FEATURED_FILE, JSON.stringify(featuredData, null, 2));
+    console.log('Delete result:', result);
 
     // Revalidate pages
     revalidatePath('/');
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error('Featured delete error:', error);
     return NextResponse.json({ 

@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import fs from 'fs/promises';
-import path from 'path';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -12,21 +10,36 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET || '',
 });
 
-const PORTFOLIO_FILE = path.join(process.cwd(), 'data', 'portfolio.json');
-
-// GET - Fetch all portfolio images
+// GET - Fetch all portfolio images from Cloudinary
 export async function GET(request: NextRequest) {
   try {
-    const fileContent = await fs.readFile(PORTFOLIO_FILE, 'utf-8');
-    const portfolioData = JSON.parse(fileContent);
-    return NextResponse.json({ success: true, images: portfolioData });
+    // Fetch all images from wildlife/portfolio folder in Cloudinary
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: 'wildlife/portfolio',
+      max_results: 500,
+      context: true, // Include metadata
+    });
+
+    const images = result.resources.map((resource: any) => ({
+      id: resource.public_id,
+      cloudinaryUrl: resource.secure_url,
+      cloudinaryPublicId: resource.public_id,
+      title: resource.context?.custom?.title || 'Untitled',
+      location: resource.context?.custom?.location || 'Unknown',
+      category: resource.context?.custom?.category ? resource.context.custom.category.split(',') : ['All'],
+      uploadedAt: resource.created_at,
+    }));
+
+    console.log(`Fetched ${images.length} portfolio images from Cloudinary`);
+    return NextResponse.json({ success: true, images });
   } catch (error) {
-    console.error('Error reading portfolio data:', error);
+    console.error('Error fetching portfolio data from Cloudinary:', error);
     return NextResponse.json({ success: true, images: [] });
   }
 }
 
-// POST - Add new portfolio image with metadata
+// POST - Add new portfolio image with metadata stored in Cloudinary
 export async function POST(request: NextRequest) {
   try {
     const authenticated = await isAuthenticated();
@@ -53,24 +66,21 @@ export async function POST(request: NextRequest) {
     const base64 = buffer.toString('base64');
     const dataURI = `data:${file.type};base64,${base64}`;
 
-    // Upload to Cloudinary
+    console.log('Uploading to Cloudinary with metadata:', { title, location, categories });
+
+    // Upload to Cloudinary WITH metadata in context
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: 'wildlife/portfolio',
       resource_type: 'auto',
+      context: {
+        title: title,
+        location: location,
+        category: categories,
+      },
     });
 
     console.log('Cloudinary upload successful:', result.secure_url);
 
-    // Read existing portfolio data
-    let portfolioData = [];
-    try {
-      const fileContent = await fs.readFile(PORTFOLIO_FILE, 'utf-8');
-      portfolioData = JSON.parse(fileContent);
-    } catch (error) {
-      console.log('Creating new portfolio data file');
-    }
-
-    // Add new image to portfolio
     const newImage = {
       id: result.public_id,
       cloudinaryUrl: result.secure_url,
@@ -78,13 +88,8 @@ export async function POST(request: NextRequest) {
       title,
       location,
       category: categories.split(',').map((c: string) => c.trim()),
-      uploadedAt: new Date().toISOString(),
+      uploadedAt: result.created_at,
     };
-
-    portfolioData.push(newImage);
-
-    // Save updated portfolio data
-    await fs.writeFile(PORTFOLIO_FILE, JSON.stringify(portfolioData, null, 2));
 
     // Revalidate pages
     revalidatePath('/wildlife');
@@ -103,7 +108,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Remove portfolio image
+// DELETE - Remove portfolio image from Cloudinary
 export async function DELETE(request: NextRequest) {
   try {
     const authenticated = await isAuthenticated();
@@ -118,32 +123,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Image ID required' }, { status: 400 });
     }
 
-    // Read portfolio data
-    const fileContent = await fs.readFile(PORTFOLIO_FILE, 'utf-8');
-    const portfolioData = JSON.parse(fileContent);
-
-    // Find image
-    const imageIndex = portfolioData.findIndex((img: any) => img.id === imageId);
-    if (imageIndex === -1) {
-      return NextResponse.json({ error: 'Image not found' }, { status: 404 });
-    }
-
-    const image = portfolioData[imageIndex];
+    console.log('Deleting from Cloudinary:', imageId);
 
     // Delete from Cloudinary
-    await cloudinary.uploader.destroy(image.cloudinaryPublicId);
+    const result = await cloudinary.uploader.destroy(imageId);
 
-    // Remove from portfolio data
-    portfolioData.splice(imageIndex, 1);
-
-    // Save updated data
-    await fs.writeFile(PORTFOLIO_FILE, JSON.stringify(portfolioData, null, 2));
+    console.log('Delete result:', result);
 
     // Revalidate pages
     revalidatePath('/wildlife');
     revalidatePath('/');
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error('Portfolio delete error:', error);
     return NextResponse.json({ 

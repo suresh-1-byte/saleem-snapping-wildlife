@@ -6,21 +6,31 @@ import FeaturedStory from "@/components/home/FeaturedStory";
 import SpeciesPreview from "@/components/home/SpeciesPreview";
 import ClosingCTA from "@/components/home/ClosingCTA";
 import { getStories } from "@/lib/content";
-import fs from 'fs/promises';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+  api_key: process.env.CLOUDINARY_API_KEY || '',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+});
 
 // Disable caching to always show latest images
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function Home() {
-  // Read featured images from JSON file
+  // Fetch featured images directly from Cloudinary
   let featuredImages: string[] = [];
   try {
-    const featuredFile = path.join(process.cwd(), 'data', 'featured.json');
-    const fileContent = await fs.readFile(featuredFile, 'utf-8');
-    const featuredData = JSON.parse(fileContent);
-    featuredImages = featuredData.map((img: any) => img.cloudinaryUrl);
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: 'wildlife/featured',
+      max_results: 500,
+    });
+
+    featuredImages = result.resources.map((resource: any) => resource.secure_url);
+    console.log(`Homepage loaded ${featuredImages.length} featured images from Cloudinary`);
   } catch (error) {
     console.error('Failed to load featured images:', error);
   }
