@@ -14,22 +14,13 @@ const caveat = Caveat({
 type Category = "All" | "Birds" | "Mammals" | "Macro" | "Landscapes" | "Wildlife Moments";
 
 interface Photo {
-  id: number;
+  id: string;
   src: string;
   alt: string;
-  category: Category[];
+  category: string[];
   title: string;
   location: string;
 }
-
-const photoDetails: Record<string, Omit<Photo, "id" | "src" | "alt">> = {
-  "portfolio-1.jpg": { category: ["All", "Birds"], title: "Great Egret at Dawn", location: "Vedanthangal, Tamil Nadu" },
-  "portfolio-2.jpg": { category: ["All", "Mammals"], title: "Asian Elephant", location: "Bandipur, Karnataka" },
-  "portfolio-3.jpg": { category: ["All", "Macro"], title: "Dragonfly Detail", location: "Chennai, Tamil Nadu" },
-  "portfolio-4.jpg": { category: ["All", "Landscapes"], title: "Misty Morning", location: "Nilgiris, Tamil Nadu" },
-  "portfolio-5.jpg": { category: ["All", "Wildlife Moments"], title: "Kingfisher Hunt", location: "Pulicat Lake, Tamil Nadu" },
-  "portfolio-6.jpg": { category: ["All", "Birds"], title: "Painted Stork", location: "Vedanthangal, Tamil Nadu" },
-};
 
 const categories: Category[] = ["All", "Birds", "Mammals", "Macro", "Landscapes", "Wildlife Moments"];
 
@@ -43,7 +34,15 @@ const rotations = [
   "rotate-1 hover:rotate-0",
 ];
 
-export default function WildlifeGallery({ images }: { images: string[] }) {
+interface PortfolioImage {
+  id: string;
+  cloudinaryUrl: string;
+  title: string;
+  location: string;
+  category: string[];
+}
+
+export default function WildlifeGallery({ images }: { images: PortfolioImage[] }) {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -62,16 +61,15 @@ export default function WildlifeGallery({ images }: { images: string[] }) {
     }
   }, []);
 
-  const photos: Photo[] = images.map((src, index) => {
-    const filename = src.split("/").pop() || "";
-    const details = photoDetails[filename] || {
-      category: ["All"] as Category[],
-      title: `Wildlife Photograph ${index + 1}`,
-      location: "South India",
-    };
-
-    return { id: index + 1, src, alt: details.title, ...details };
-  });
+  // Convert portfolio images to photo format
+  const photos: Photo[] = images.map((img) => ({
+    id: img.id,
+    src: img.cloudinaryUrl,
+    alt: img.title,
+    category: ["All", ...img.category],
+    title: img.title,
+    location: img.location,
+  }));
 
   const filteredPhotos = activeCategory === "All"
     ? photos

@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImagesManager from "./ImagesManager";
+import PortfolioManager from "./PortfolioManager";
+import FeaturedManager from "./FeaturedManager";
 import StoriesManager from "./StoriesManager";
 import SpeciesManager from "./SpeciesManager";
 
-type Tab = "images" | "stories" | "species";
+type Tab = "portfolio" | "featured" | "images" | "stories" | "species";
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>("images");
+  const [activeTab, setActiveTab] = useState<Tab>("portfolio");
   const router = useRouter();
 
   async function handleLogout() {
@@ -49,20 +51,40 @@ export default function AdminDashboard() {
       {/* Navigation Tabs */}
       <div className="bg-charcoal/50 border-b border-white/10">
         <div className="container-padding">
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("portfolio")}
+              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+                activeTab === "portfolio"
+                  ? "bg-earthy-green text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              🖼️ PORTFOLIO
+            </button>
+            <button
+              onClick={() => setActiveTab("featured")}
+              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+                activeTab === "featured"
+                  ? "bg-earthy-green text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              ⭐ FEATURED
+            </button>
             <button
               onClick={() => setActiveTab("images")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors ${
+              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "images"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
               }`}
             >
-              📸 IMAGES
+              📸 BACKGROUNDS
             </button>
             <button
               onClick={() => setActiveTab("stories")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors ${
+              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "stories"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -72,7 +94,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("species")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors ${
+              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "species"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -86,6 +108,8 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <div className="container-padding py-8">
+        {activeTab === "portfolio" && <PortfolioManager />}
+        {activeTab === "featured" && <FeaturedManager />}
         {activeTab === "images" && <ImagesManager />}
         {activeTab === "stories" && <StoriesManager />}
         {activeTab === "species" && <SpeciesManager />}
