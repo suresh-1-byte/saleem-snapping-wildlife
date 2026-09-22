@@ -1,4 +1,4 @@
-import { readJSON } from "@/lib/db";
+import { readContent } from "@/lib/contentStorage";
 
 export interface Species {
   id: string;
@@ -23,11 +23,9 @@ export interface Story {
 }
 
 export async function getSpecies(): Promise<Species[]> {
-  const data = await readJSON("species.json");
-  return data?.species || [];
+  return readContent<Species>("species.json", "species");
 }
 
 export async function getStories(): Promise<Story[]> {
-  const data = await readJSON("stories.json");
-  return data?.stories || [];
+  return readContent<Story>("stories.json", "stories");
 }

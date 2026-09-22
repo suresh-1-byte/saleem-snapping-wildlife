@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { readJSON, writeJSON } from '@/lib/db';
+import { readContent, writeContent } from '@/lib/contentStorage';
 import { revalidatePath } from 'next/cache';
 
 export async function GET() {
@@ -10,8 +10,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const stories = await readJSON('stories.json') || { stories: [] };
-    return NextResponse.json(stories);
+    const stories = await readContent('stories.json', 'stories');
+    return NextResponse.json({ stories });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch stories' }, { status: 500 });
   }
@@ -25,17 +25,20 @@ export async function POST(request: NextRequest) {
     }
 
     const story = await request.json();
-    const data = await readJSON('stories.json') || { stories: [] };
-    
-    const existingIndex = data.stories.findIndex((s: any) => s.id === story.id);
-    
-    if (existingIndex >= 0) {
-      data.stories[existingIndex] = story;
-    } else {
-      data.stories.push(story);
+    if (!story?.id || !story?.title || !story?.location || !story?.introduction || !story?.content) {
+      return NextResponse.json({ error: 'Title, location, introduction, and content are required' }, { status: 400 });
     }
 
-    await writeJSON('stories.json', data);
+    const stories = await readContent<any>('stories.json', 'stories');
+    const existingIndex = stories.findIndex((s: any) => s.id === story.id);
+    
+    if (existingIndex >= 0) {
+      stories[existingIndex] = story;
+    } else {
+      stories.push(story);
+    }
+
+    await writeContent('stories.json', 'stories', stories);
     revalidatePath('/stories');
     revalidatePath('/');
     return NextResponse.json({ success: true });
@@ -54,10 +57,10 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    const data = await readJSON('stories.json') || { stories: [] };
-    data.stories = data.stories.filter((s: any) => s.id !== id);
+    if (!id) return NextResponse.json({ error: 'Story ID required' }, { status: 400 });
 
-    await writeJSON('stories.json', data);
+    const stories = await readContent<any>('stories.json', 'stories');
+    await writeContent('stories.json', 'stories', stories.filter((s: any) => s.id !== id));
     revalidatePath('/stories');
     revalidatePath('/');
     return NextResponse.json({ success: true });

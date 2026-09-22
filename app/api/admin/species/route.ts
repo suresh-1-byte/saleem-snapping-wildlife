@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { readJSON, writeJSON } from '@/lib/db';
+import { readContent, writeContent } from '@/lib/contentStorage';
 import { revalidatePath } from 'next/cache';
 
 export async function GET() {
@@ -10,8 +10,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const species = await readJSON('species.json') || { species: [] };
-    return NextResponse.json(species);
+    const species = await readContent('species.json', 'species');
+    return NextResponse.json({ species });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch species' }, { status: 500 });
   }
@@ -25,17 +25,20 @@ export async function POST(request: NextRequest) {
     }
 
     const spec = await request.json();
-    const data = await readJSON('species.json') || { species: [] };
-    
-    const existingIndex = data.species.findIndex((s: any) => s.id === spec.id);
-    
-    if (existingIndex >= 0) {
-      data.species[existingIndex] = spec;
-    } else {
-      data.species.push(spec);
+    if (!spec?.id || !spec?.commonName || !spec?.category) {
+      return NextResponse.json({ error: 'Common name and category are required' }, { status: 400 });
     }
 
-    await writeJSON('species.json', data);
+    const species = await readContent<any>('species.json', 'species');
+    const existingIndex = species.findIndex((s: any) => s.id === spec.id);
+    
+    if (existingIndex >= 0) {
+      species[existingIndex] = spec;
+    } else {
+      species.push(spec);
+    }
+
+    await writeContent('species.json', 'species', species);
     revalidatePath('/species');
     revalidatePath('/');
     return NextResponse.json({ success: true });
@@ -54,10 +57,10 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    const data = await readJSON('species.json') || { species: [] };
-    data.species = data.species.filter((s: any) => s.id !== id);
+    if (!id) return NextResponse.json({ error: 'Species ID required' }, { status: 400 });
 
-    await writeJSON('species.json', data);
+    const species = await readContent<any>('species.json', 'species');
+    await writeContent('species.json', 'species', species.filter((s: any) => s.id !== id));
     revalidatePath('/species');
     revalidatePath('/');
     return NextResponse.json({ success: true });
