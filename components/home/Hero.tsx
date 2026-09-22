@@ -28,9 +28,16 @@ export default function Hero() {
       .then(res => res.json())
       .then(data => {
         if (data.success && data.images) {
-          const heroUrl = data.images['/images/hero pg'] || data.images['/images/hero%20pg'] || data.images['/images/hero pg.png'];
+          console.log('Available image paths:', Object.keys(data.images));
+          const heroUrl = data.images['/images/hero pg'] || 
+                         data.images['/images/hero%20pg'] || 
+                         data.images['/images/hero pg.png'] ||
+                         data.images['/images/hero%20pg.png'];
           if (heroUrl) {
+            console.log('Hero image found:', heroUrl);
             setHeroBg(heroUrl);
+          } else {
+            console.log('Hero image not found in Cloudinary, using local');
           }
         }
       })
