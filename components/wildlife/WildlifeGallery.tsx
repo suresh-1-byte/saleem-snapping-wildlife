@@ -14,7 +14,7 @@ const caveat = Caveat({
 type Category = "All" | "Birds" | "Mammals" | "Macro" | "Landscapes" | "Wildlife Moments";
 
 interface Photo {
-  id: string;
+  id: number;
   src: string;
   alt: string;
   category: string[];
@@ -62,8 +62,8 @@ export default function WildlifeGallery({ images }: { images: PortfolioImage[] }
   }, []);
 
   // Convert portfolio images to photo format
-  const photos: Photo[] = images.map((img) => ({
-    id: img.id,
+  const photos: Photo[] = images.map((img, index) => ({
+    id: index + 1, // Use index as numeric ID for Lightbox compatibility
     src: img.cloudinaryUrl,
     alt: img.title,
     category: ["All", ...img.category],
