@@ -1,38 +1,81 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 export default function CameraScrollSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [hasPlayed, setHasPlayed] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const section = sectionRef.current;
+
+    if (!video || !section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasPlayed) {
+            // Play video when section comes into view
+            video.play().catch((err) => console.log("Video play failed:", err));
+            setHasPlayed(true);
+          }
+        });
+      },
+      { threshold: 0.5 } // Trigger when 50% of section is visible
+    );
+
+    observer.observe(section);
+
+    // Reset hasPlayed when video ends
+    const handleVideoEnd = () => {
+      setHasPlayed(false);
+    };
+
+    video.addEventListener('ended', handleVideoEnd);
+
+    return () => {
+      observer.disconnect();
+      video.removeEventListener('ended', handleVideoEnd);
+    };
+  }, [hasPlayed]);
+
   return (
-    <div className="camera-scroll-section h-screen w-full bg-gradient-to-br from-neutral-900 via-neutral-800 to-black relative overflow-hidden flex items-center justify-center">
-      {/* Animated Camera Lens - Pure CSS, No GSAP */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        {/* Outer Ring - Rotates continuously */}
-        <div className="absolute w-80 h-80 rounded-full border-4 border-white/20" />
-        
-        {/* Middle Ring - Rotates opposite direction */}
-        <div className="absolute w-60 h-60 rounded-full border-4 border-white/30" />
+    <div 
+      ref={sectionRef}
+      className="camera-scroll-section h-screen w-full bg-black relative overflow-hidden flex items-center justify-center"
+    >
+      {/* Video Background */}
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover"
+        muted
+        playsInline
+        preload="auto"
+      >
+        <source src="/lens.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
 
-        {/* Center Camera Icon */}
-        <div className="absolute w-32 h-32 rounded-full bg-white/10 flex items-center justify-center">
-          <div className="text-6xl">📷</div>
-        </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute w-96 h-96 rounded-full border border-white/10" />
-      </div>
+      {/* Dark Overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/40 z-[1]" />
 
       {/* Content Overlay */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 px-4">
         <h2 className="text-4xl md:text-6xl font-cinzel font-bold tracking-wider mb-4 text-white drop-shadow-2xl text-center">
           THROUGH THE LENS
         </h2>
-        <p className="text-lg md:text-xl font-playfair text-white/70 text-center max-w-2xl">
+        <p className="text-lg md:text-xl font-playfair text-white/90 text-center max-w-2xl drop-shadow-lg">
           Every moment captured tells a story of wildlife in its natural beauty
         </p>
       </div>
 
-      {/* Simple vignette */}
+      {/* Vignette Effect */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-[2]"
         style={{
-          background: "radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%)",
+          background: "radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.5) 100%)",
         }}
       />
 
