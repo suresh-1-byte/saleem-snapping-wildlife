@@ -54,7 +54,7 @@ export default function CameraScrollSection() {
         playsInline
         preload="auto"
       >
-        <source src="/lens.mp4" type="video/mp4" />
+        <source src="/videos/lens.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
