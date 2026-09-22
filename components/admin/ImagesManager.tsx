@@ -146,7 +146,9 @@ export default function ImagesManager() {
           // Reload to fetch new Cloudinary URL
           setTimeout(() => window.location.reload(), 1500);
         } else {
-          setMessage(`✗ Failed to upload ${imageKey}: ${data.error || 'Unknown error'}`);
+          const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Unknown error');
+          setMessage(`✗ Failed to upload ${imageKey}: ${errorMsg}`);
+          console.error('Upload failed:', data);
         }
       } catch (error) {
         setMessage(`✗ Error uploading ${imageKey}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -227,7 +229,9 @@ export default function ImagesManager() {
           setMessage(`✓ New ${prefix} photo added successfully! URL: ${data.path}`);
           setTimeout(() => window.location.reload(), 2000);
         } else {
-          setMessage(`✗ Failed to add new ${prefix} photo: ${data.error || 'Unknown error'}`);
+          const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Unknown error');
+          setMessage(`✗ Failed to add new ${prefix} photo: ${errorMsg}`);
+          console.error('Upload failed:', data);
         }
       } catch (error) {
         setMessage(`✗ Error adding new ${prefix} photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
