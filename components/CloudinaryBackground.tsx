@@ -12,10 +12,7 @@ interface CloudinaryBackgroundProps {
 
 export default function CloudinaryBackground({ src, alt, className = "", overlay }: CloudinaryBackgroundProps) {
   const { getImageUrl } = useCloudinaryImages();
-  
-  // Remove file extension if present for matching
-  const pathWithoutExt = src.replace(/\.[^/.]+$/, '');
-  const imageUrl = getImageUrl(pathWithoutExt);
+  const imageUrl = getImageUrl(src);
 
   return (
     <div className="absolute inset-0 z-0">
@@ -26,6 +23,7 @@ export default function CloudinaryBackground({ src, alt, className = "", overlay
         className={`object-cover ${className}`}
         sizes="100vw"
         unoptimized
+        priority
       />
       {overlay && <div className={overlay} />}
     </div>
