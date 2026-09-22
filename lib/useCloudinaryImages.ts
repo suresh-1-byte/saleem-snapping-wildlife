@@ -28,8 +28,22 @@ export function useCloudinaryImages() {
   }, []);
 
   const getImageUrl = (path: string): string => {
-    // Return Cloudinary URL if available, otherwise return original path
-    return imageMap[path] || path;
+    // Try exact match first
+    if (imageMap[path]) return imageMap[path];
+    
+    // Try without extension
+    const pathWithoutExt = path.replace(/\.[^/.]+$/, '');
+    if (imageMap[pathWithoutExt]) return imageMap[pathWithoutExt];
+    
+    // Try common extensions
+    const extensions = ['.png', '.jpg', '.jpeg', '.webp'];
+    for (const ext of extensions) {
+      const pathWithExt = pathWithoutExt + ext;
+      if (imageMap[pathWithExt]) return imageMap[pathWithExt];
+    }
+    
+    // Return original path with .png extension as fallback
+    return path.includes('.') ? path : path + '.png';
   };
 
   return { getImageUrl, loading, imageMap };
