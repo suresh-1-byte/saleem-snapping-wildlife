@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import WildlifeManager from "./WildlifeManager";
 import ImagesManager from "./ImagesManager";
-import PortfolioManager from "./PortfolioManager";
 import FeaturedManager from "./FeaturedManager";
 import StoriesManager from "./StoriesManager";
 import SpeciesManager from "./SpeciesManager";
 
-type Tab = "portfolio" | "featured" | "images" | "stories" | "species";
+type Tab = "wildlife" | "featured" | "images" | "stories" | "species";
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>("portfolio");
+  const [activeTab, setActiveTab] = useState<Tab>("wildlife");
   const router = useRouter();
 
   async function handleLogout() {
@@ -53,14 +53,14 @@ export default function AdminDashboard() {
         <div className="container-padding">
           <div className="flex gap-1 overflow-x-auto">
             <button
-              onClick={() => setActiveTab("portfolio")}
+              onClick={() => setActiveTab("wildlife")}
               className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
-                activeTab === "portfolio"
+                activeTab === "wildlife"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
               }`}
             >
-              🖼️ PORTFOLIO
+              🦅 WILDLIFE
             </button>
             <button
               onClick={() => setActiveTab("featured")}
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <div className="container-padding py-8">
-        {activeTab === "portfolio" && <PortfolioManager />}
+        {activeTab === "wildlife" && <WildlifeManager />}
         {activeTab === "featured" && <FeaturedManager />}
         {activeTab === "images" && <ImagesManager />}
         {activeTab === "stories" && <StoriesManager />}
