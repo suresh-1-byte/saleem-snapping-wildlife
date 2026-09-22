@@ -15,18 +15,22 @@ export async function getPublicImages(prefix: string) {
     try {
       const result = await cloudinary.api.resources({
         type: 'upload',
-        prefix: `images/${prefix}-`,
+        prefix: `images/${prefix}`,
         max_results: 100,
       });
 
       if (result.resources && result.resources.length > 0) {
+        console.log(`Found ${result.resources.length} images in Cloudinary with prefix: images/${prefix}`);
         return result.resources
           .sort((a: any, b: any) => {
+            // Try to extract numbers from the filename for sorting
             const aNum = parseInt(a.public_id.match(/\d+$/)?.[0] || '0');
             const bNum = parseInt(b.public_id.match(/\d+$/)?.[0] || '0');
             return aNum - bNum;
           })
           .map((resource: any) => resource.secure_url);
+      } else {
+        console.log(`No images found in Cloudinary with prefix: images/${prefix}`);
       }
     } catch (error) {
       console.log('Cloudinary fetch failed, falling back to local:', error);
@@ -38,12 +42,16 @@ export async function getPublicImages(prefix: string) {
 
   try {
     const filenames = await fs.readdir(imagesDirectory);
-    return filenames
+    const filtered = filenames
       .filter((filename) => filename.startsWith(`${prefix}-`))
       .filter((filename) => /\.(jpg|jpeg|png|webp|avif)$/i.test(filename))
       .sort((first, second) => first.localeCompare(second, undefined, { numeric: true }))
       .map((filename) => `/images/${filename}`);
-  } catch {
+    
+    console.log(`Found ${filtered.length} local images with prefix: ${prefix}`);
+    return filtered;
+  } catch (error) {
+    console.log('Failed to read local images:', error);
     return [];
   }
 }

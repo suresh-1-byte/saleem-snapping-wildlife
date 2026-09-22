@@ -50,7 +50,14 @@ export async function POST(request: NextRequest) {
     const filename = pathParts[pathParts.length - 1].replace(/\.[^/.]+$/, ''); // Remove extension
     const folder = pathParts.slice(0, -1).join('/');
 
-    console.log('Uploading to Cloudinary:', { folder, filename });
+    console.log('Upload details:', { 
+      originalPath: imagePath, 
+      relativePath, 
+      folder, 
+      filename,
+      fileSize: file.size,
+      fileType: file.type
+    });
 
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(dataURI, {
@@ -60,15 +67,27 @@ export async function POST(request: NextRequest) {
       resource_type: 'auto',
     });
 
-    console.log('Cloudinary upload successful:', result.secure_url);
+    console.log('Cloudinary upload successful:', { 
+      url: result.secure_url,
+      publicId: result.public_id,
+      format: result.format,
+      width: result.width,
+      height: result.height
+    });
 
-    // Revalidate all pages that use images
-    revalidatePath('/', 'layout');
-    revalidatePath('/wildlife');
-    revalidatePath('/species');
-    revalidatePath('/stories');
-    revalidatePath('/about');
-    revalidatePath('/contact');
+    // Force revalidation of all image-related pages
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/');
+      revalidatePath('/wildlife');
+      revalidatePath('/species');
+      revalidatePath('/stories');
+      revalidatePath('/about');
+      revalidatePath('/contact');
+      console.log('Cache revalidation completed');
+    } catch (revalidateError) {
+      console.error('Revalidation error:', revalidateError);
+    }
 
     return NextResponse.json({ 
       success: true, 
@@ -91,27 +110,45 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const publicId = new URL(request.url).searchParams.get('publicId');
+    const url = new URL(request.url);
+    let publicId = url.searchParams.get('publicId');
+    const imagePath = url.searchParams.get('imagePath');
+
+    // If publicId not provided, construct it from imagePath
+    if (!publicId && imagePath) {
+      const relativePath = decodeURIComponent(imagePath).replace(/^[/\\]+/, '');
+      const pathParts = relativePath.split('/');
+      const filename = pathParts[pathParts.length - 1].replace(/\.[^/.]+$/, ''); // Remove extension
+      const folder = pathParts.slice(0, -1).join('/');
+      publicId = folder ? `${folder}/${filename}` : filename;
+    }
+
     if (!publicId) {
-      return NextResponse.json({ error: 'No public ID provided' }, { status: 400 });
+      return NextResponse.json({ error: 'No public ID or image path provided' }, { status: 400 });
     }
 
     console.log('Deleting from Cloudinary:', publicId);
 
     // Delete from Cloudinary
-    await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId);
     
-    console.log('Cloudinary delete successful');
+    console.log('Cloudinary delete result:', result);
     
-    // Revalidate all pages that use images
-    revalidatePath('/', 'layout');
-    revalidatePath('/wildlife');
-    revalidatePath('/species');
-    revalidatePath('/stories');
-    revalidatePath('/about');
-    revalidatePath('/contact');
+    // Force revalidation of all image-related pages
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/');
+      revalidatePath('/wildlife');
+      revalidatePath('/species');
+      revalidatePath('/stories');
+      revalidatePath('/about');
+      revalidatePath('/contact');
+      console.log('Cache revalidation completed after delete');
+    } catch (revalidateError) {
+      console.error('Revalidation error:', revalidateError);
+    }
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, result });
   } catch (error: any) {
     console.error('Delete error:', error);
     return NextResponse.json({ 

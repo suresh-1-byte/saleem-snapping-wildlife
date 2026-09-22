@@ -142,9 +142,12 @@ export default function ImagesManager() {
         const data = await res.json();
         
         if (res.ok) {
-          setMessage(`✓ ${imageKey} updated successfully! Reloading...`);
-          // Reload to fetch new Cloudinary URL
-          setTimeout(() => window.location.reload(), 1500);
+          setMessage(`✓ ${imageKey} updated successfully! Cloudinary URL: ${data.path}`);
+          console.log('Upload successful:', data);
+          // Hard reload after a short delay to ensure Cloudinary and cache are updated
+          setTimeout(() => {
+            window.location.href = window.location.href;
+          }, 2000);
         } else {
           const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Unknown error');
           setMessage(`✗ Failed to upload ${imageKey}: ${errorMsg}`);
@@ -175,11 +178,17 @@ export default function ImagesManager() {
       );
 
       if (res.ok) {
-        setMessage(`✓ ${imageKey} removed successfully.`);
-        window.location.reload();
+        setMessage(`✓ ${imageKey} removed successfully. Reloading...`);
+        console.log('Delete successful');
+        // Hard reload to ensure cache is cleared
+        setTimeout(() => {
+          window.location.href = window.location.href;
+        }, 1500);
       } else {
         const data = await res.json().catch(() => null);
-        setMessage(`✗ ${data?.error || `Failed to remove ${imageKey}`}`);
+        const errorMsg = data?.details ? `${data.error}: ${data.details}` : (data?.error || 'Failed to remove');
+        setMessage(`✗ ${errorMsg}`);
+        console.error('Delete failed:', data);
       }
     } catch (error) {
       setMessage(`✗ Error removing ${imageKey}`);
@@ -227,7 +236,10 @@ export default function ImagesManager() {
         
         if (res.ok) {
           setMessage(`✓ New ${prefix} photo added successfully! URL: ${data.path}`);
-          setTimeout(() => window.location.reload(), 2000);
+          console.log('New photo upload successful:', data);
+          setTimeout(() => {
+            window.location.href = window.location.href;
+          }, 2000);
         } else {
           const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Unknown error');
           setMessage(`✗ Failed to add new ${prefix} photo: ${errorMsg}`);
