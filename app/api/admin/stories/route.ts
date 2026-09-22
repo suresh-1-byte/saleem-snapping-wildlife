@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { readJSON, writeJSON } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 export async function GET() {
   try {
@@ -35,6 +36,8 @@ export async function POST(request: NextRequest) {
     }
 
     await writeJSON('stories.json', data);
+    revalidatePath('/stories');
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to save story' }, { status: 500 });
@@ -55,6 +58,8 @@ export async function DELETE(request: NextRequest) {
     data.stories = data.stories.filter((s: any) => s.id !== id);
 
     await writeJSON('stories.json', data);
+    revalidatePath('/stories');
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete story' }, { status: 500 });

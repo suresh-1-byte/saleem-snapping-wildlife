@@ -39,6 +39,7 @@ export default function StoriesManager() {
   }
 
   async function handleSaveStory(story: Story) {
+    setFormMessage("");
     try {
       const res = await fetch("/api/admin/stories", {
         method: "POST",
@@ -47,12 +48,17 @@ export default function StoriesManager() {
       });
 
       if (res.ok) {
+        setFormMessage("Story saved successfully.");
         fetchStories();
         setShowForm(false);
         setEditingStory(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setFormMessage(data.error || "Could not save the story.");
       }
     } catch (error) {
       console.error("Error saving story:", error);
+      setFormMessage("Could not save the story. Check the server and try again.");
     }
   }
 
@@ -115,9 +121,14 @@ export default function StoriesManager() {
 
       if (res.ok) {
         fetchStories();
+        setFormMessage("Story deleted successfully.");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setFormMessage(data.error || "Could not delete the story.");
       }
     } catch (error) {
       console.error("Error deleting story:", error);
+      setFormMessage("Could not delete the story. Check the server and try again.");
     }
   }
 
@@ -154,7 +165,7 @@ export default function StoriesManager() {
       {showForm && editingStory && (
         <div className="bg-charcoal border border-white/10 rounded-lg p-6">
           <h3 className="text-xl font-semibold mb-4">
-            {editingStory.id ? "Edit Story" : "New Story"}
+            {stories.some((story) => story.id === editingStory.id) ? "Edit Story" : "New Story"}
           </h3>
           <form
             onSubmit={(e) => {
@@ -285,7 +296,6 @@ export default function StoriesManager() {
                   ))}
                 </div>
               )}
-              {formMessage && <p className="text-sm text-earthy-green-light">{formMessage}</p>}
             </div>
 
             <div className="flex gap-4">
@@ -308,6 +318,12 @@ export default function StoriesManager() {
             </div>
           </form>
         </div>
+      )}
+
+      {formMessage && (
+        <p className="px-4 py-3 rounded border border-earthy-green/40 bg-earthy-green/10 text-earthy-green-light">
+          {formMessage}
+        </p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

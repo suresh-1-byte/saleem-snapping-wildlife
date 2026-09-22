@@ -283,7 +283,7 @@ export default function PortfolioManager() {
 
       {images.length === 0 && (
         <div className="text-center py-12 text-white/60">
-          <p>No portfolio images yet. Click "Add Portfolio Image" to get started.</p>
+          <p>No portfolio images yet. Click &quot;Add Portfolio Image&quot; to get started.</p>
         </div>
       )}
     </div>

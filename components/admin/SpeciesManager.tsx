@@ -39,6 +39,7 @@ export default function SpeciesManager() {
   }
 
   async function handleSaveSpecies(spec: Species) {
+    setFormMessage("");
     try {
       const res = await fetch("/api/admin/species", {
         method: "POST",
@@ -47,12 +48,17 @@ export default function SpeciesManager() {
       });
 
       if (res.ok) {
+        setFormMessage("Species saved successfully.");
         fetchSpecies();
         setShowForm(false);
         setEditingSpecies(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setFormMessage(data.error || "Could not save the species.");
       }
     } catch (error) {
       console.error("Error saving species:", error);
+      setFormMessage("Could not save the species. Check the server and try again.");
     }
   }
 
@@ -111,9 +117,14 @@ export default function SpeciesManager() {
 
       if (res.ok) {
         fetchSpecies();
+        setFormMessage("Species deleted successfully.");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setFormMessage(data.error || "Could not delete the species.");
       }
     } catch (error) {
       console.error("Error deleting species:", error);
+      setFormMessage("Could not delete the species. Check the server and try again.");
     }
   }
 
@@ -148,7 +159,7 @@ export default function SpeciesManager() {
       {showForm && editingSpecies && (
         <div className="bg-charcoal border border-white/10 rounded-lg p-6">
           <h3 className="text-xl font-semibold mb-4">
-            {editingSpecies.id ? "Edit Species" : "New Species"}
+            {species.some((item) => item.id === editingSpecies.id) ? "Edit Species" : "New Species"}
           </h3>
           <form
             onSubmit={(e) => {
@@ -287,7 +298,6 @@ export default function SpeciesManager() {
                   ))}
                 </div>
               )}
-              {formMessage && <p className="text-sm text-earthy-green-light">{formMessage}</p>}
             </div>
 
             <div className="flex gap-4">
@@ -310,6 +320,12 @@ export default function SpeciesManager() {
             </div>
           </form>
         </div>
+      )}
+
+      {formMessage && (
+        <p className="px-4 py-3 rounded border border-earthy-green/40 bg-earthy-green/10 text-earthy-green-light">
+          {formMessage}
+        </p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

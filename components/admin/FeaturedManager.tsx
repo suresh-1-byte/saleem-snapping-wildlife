@@ -173,7 +173,7 @@ export default function FeaturedManager() {
 
       {images.length === 0 && (
         <div className="text-center py-12 text-white/60">
-          <p>No featured images yet. Click "Add Featured Image" to get started.</p>
+          <p>No featured images yet. Click &quot;Add Featured Image&quot; to get started.</p>
         </div>
       )}
     </div>

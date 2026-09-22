@@ -36,16 +36,6 @@ const IMAGE_CATEGORIES = [
     })),
   },
   {
-    category: "Portfolio",
-    addPrefix: "portfolio",
-    images: Array.from({ length: 6 }, (_, i) => ({
-      key: `portfolio-${i + 1}`,
-      label: `Portfolio Image ${i + 1}`,
-      path: `/images/portfolio-${i + 1}.jpg`,
-      description: `Portfolio image ${i + 1}`,
-    })),
-  },
-  {
     category: "Species Categories",
     addPrefix: "species",
     images: [

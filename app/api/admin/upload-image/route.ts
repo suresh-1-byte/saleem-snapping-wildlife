@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const imagePath = formData.get('imagePath') as string;
 
-    if (!file) {
+    if (!file || typeof file.arrayBuffer !== 'function') {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
@@ -47,8 +47,18 @@ export async function POST(request: NextRequest) {
     // Extract folder and filename from path
     const relativePath = decodeURIComponent(imagePath).replace(/^[/\\]+/, '');
     const pathParts = relativePath.split('/');
-    const filename = pathParts[pathParts.length - 1].replace(/\.[^/.]+$/, ''); // Remove extension
-    const folder = pathParts.slice(0, -1).join('/');
+    const filename = pathParts[pathParts.length - 1]
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9_-]/g, '-');
+    const folder = pathParts
+      .slice(0, -1)
+      .map((part) => part.replace(/[^a-zA-Z0-9_-]/g, '-'))
+      .filter(Boolean)
+      .join('/');
+
+    if (!filename) {
+      return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
+    }
 
     console.log('Upload details:', { 
       originalPath: imagePath, 
@@ -64,6 +74,7 @@ export async function POST(request: NextRequest) {
       folder: folder || 'wildlife',
       public_id: filename,
       overwrite: true,
+      invalidate: true,
       resource_type: 'auto',
     });
 
@@ -96,9 +107,18 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Upload error:', error);
+    const uploadError = error as {
+      message?: string;
+      name?: string;
+      http_code?: number;
+      error?: { message?: string };
+    };
+    const details = uploadError.error?.message || uploadError.message || 'Unknown upload error';
     return NextResponse.json({ 
       error: 'Upload failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details,
+      code: uploadError.http_code,
+      type: uploadError.name,
     }, { status: 500 });
   }
 }

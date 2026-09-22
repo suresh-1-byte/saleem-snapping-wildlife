@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { readJSON, writeJSON } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 export async function GET() {
   try {
@@ -35,6 +36,8 @@ export async function POST(request: NextRequest) {
     }
 
     await writeJSON('species.json', data);
+    revalidatePath('/species');
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to save species' }, { status: 500 });
@@ -55,6 +58,8 @@ export async function DELETE(request: NextRequest) {
     data.species = data.species.filter((s: any) => s.id !== id);
 
     await writeJSON('species.json', data);
+    revalidatePath('/species');
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete species' }, { status: 500 });
