@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImagesProvider";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,8 +11,9 @@ export default function Footer() {
           <p className="text-sm md:text-base opacity-80">
             Saleem Snapping <span className="text-muted-olive">•</span> Wildlife Photographer <span className="text-muted-olive">•</span> Chennai, India
           </p>
-          <Image
+          <SiteImage
             src="/images/watermark.png"
+            deliveryWidth={480}
             alt="Saleem Snapping signature"
             width={240}
             height={96}

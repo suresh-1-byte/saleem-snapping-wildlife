@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImagesProvider";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -61,8 +61,9 @@ export default function Navigation() {
               href="/"
               className="group flex items-center gap-3 text-sm lg:text-base font-medium tracking-[0.18em] hover:opacity-70 transition-opacity duration-300"
             >
-              <Image
+              <SiteImage
                 src="/images/watermark.png"
+                deliveryWidth={400}
                 alt="Saleem Snapping logo"
                 width={180}
                 height={72}

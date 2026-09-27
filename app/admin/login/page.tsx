@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImagesProvider";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -48,8 +48,9 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 opacity-20">
-        <Image
+        <SiteImage
           src="/images/hero%20pg.png"
+          deliveryWidth={1600}
           alt="Background"
           fill
           className="object-cover"

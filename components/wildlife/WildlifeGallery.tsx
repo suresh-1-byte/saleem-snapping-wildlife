@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Caveat } from "next/font/google";
 import Lightbox from "@/components/Lightbox";
 import WatermarkedPhoto from "@/components/WatermarkedPhoto";
+import { cormorant } from "@/lib/fonts";
 
 // Google Handwritten Font configuration
 const caveat = Caveat({
@@ -132,11 +133,16 @@ export default function WildlifeGallery({ images }: { images: PortfolioImage[] }
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-tr from-transparent via-white/20 to-transparent" />
                 </div>
 
-                {/* Handwritten Text Area */}
-                <div className="mt-3 md:mt-4 text-center px-1">
-                  <p className={`${caveat.className} text-stone-900 text-xl sm:text-2xl md:text-3xl font-semibold leading-tight tracking-wide drop-shadow-sm`}>
-                    {photo.title}, {photo.location}
+                {/* Photo name & location, in the hero's "THROUGH MY" typeface */}
+                <div className={`${cormorant.className} mt-3 md:mt-4 text-center px-1 uppercase font-semibold leading-tight break-words`}>
+                  <p className="text-stone-900 text-lg sm:text-xl md:text-2xl tracking-[0.08em]">
+                    {photo.title}
                   </p>
+                  {photo.location && (
+                    <p className="mt-1 text-[#6b6e3f] text-xs sm:text-sm md:text-base tracking-[0.13em]">
+                      {photo.location}
+                    </p>
+                  )}
                 </div>
               </div>
             );

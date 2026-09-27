@@ -6,6 +6,7 @@ interface WatermarkedPhotoProps {
   className?: string;
   watermarkClassName?: string;
   fill?: boolean;
+  deliveryWidth?: number;
 }
 
 export default function WatermarkedPhoto({
@@ -14,6 +15,7 @@ export default function WatermarkedPhoto({
   className = "",
   watermarkClassName = "w-16 md:w-20",
   fill = false,
+  deliveryWidth,
 }: WatermarkedPhotoProps) {
   return (
     <AdaptiveWatermarkImage
@@ -22,6 +24,7 @@ export default function WatermarkedPhoto({
       imageClassName={className}
       watermarkClassName={watermarkClassName}
       fill={fill}
+      deliveryWidth={deliveryWidth}
     />
   );
 }

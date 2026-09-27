@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, Cinzel } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { SiteImagesProvider } from "@/components/SiteImagesProvider";
+import { getSiteImageMap } from "@/lib/cloudinary";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -26,12 +28,6 @@ export const metadata: Metadata = {
   description: "Wildlife photography from Chennai, India. Birds, mammals, landscapes and the quiet moments that often go unnoticed in the wild.",
   keywords: ["wildlife photography", "Chennai photographer", "bird photography", "mammal photography", "South India wildlife"],
   authors: [{ name: "Saleem Snapping" }],
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
   openGraph: {
     title: "Saleem Snapping | Wildlife Photography",
     description: "Wildlife photography from Chennai, India. Birds, mammals, landscapes and the quiet moments that often go unnoticed in the wild.",
@@ -50,24 +46,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+};
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Admin-uploaded replacements for the site's images, shared with every page
+  // so the website always shows exactly what the admin panel shows.
+  const siteImages = await getSiteImageMap();
+
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} ${cinzel.variable}`}>
       <head>
-        {/* Preload hero image for faster LCP */}
-        <link rel="preload" href="/images/hero%20pg.png" as="image" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
         {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
       </head>
       <body className={inter.className}>
-        <Navigation />
-        <main>{children}</main>
-        <Footer />
+        <SiteImagesProvider images={siteImages}>
+          <Navigation />
+          <main>{children}</main>
+          <Footer />
+        </SiteImagesProvider>
       </body>
     </html>
   );

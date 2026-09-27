@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useSiteImages } from "@/components/SiteImagesProvider";
+import { uploadImage } from "@/lib/adminUpload";
+import { deliveryUrl } from "@/lib/siteImages";
 
 interface Species {
   id: string;
@@ -21,6 +23,7 @@ export default function SpeciesManager() {
   const [showForm, setShowForm] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
   const [formMessage, setFormMessage] = useState("");
+  const { resolve } = useSiteImages();
 
   useEffect(() => {
     fetchSpecies();
@@ -65,24 +68,14 @@ export default function SpeciesManager() {
   async function uploadSpeciesPhoto(file: File, slot: "main" | "additional") {
     if (!editingSpecies) return;
 
-    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const imagePath = `/images/species-${editingSpecies.id}-${slot}-${Date.now()}.${extension}`;
     setUploadingPhoto(slot);
     setFormMessage("");
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("imagePath", imagePath);
-      const response = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        body: formData,
+      const { url: imagePath } = await uploadImage(file, {
+        folder: "images",
+        publicId: `species-${editingSpecies.id}-${slot}-${Date.now()}`.replace(/[^a-zA-Z0-9_-]/g, "-"),
       });
-
-      if (!response.ok) {
-        setFormMessage("Could not upload that photo.");
-        return;
-      }
 
       setEditingSpecies((current) => {
         if (!current) return current;
@@ -94,7 +87,7 @@ export default function SpeciesManager() {
       });
       setFormMessage("Photo added. Save the species to publish it.");
     } catch (error) {
-      setFormMessage("Could not upload that photo.");
+      setFormMessage(`Could not upload that photo: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setUploadingPhoto(null);
     }
@@ -285,7 +278,8 @@ export default function SpeciesManager() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {editingSpecies.images.map((image, index) => (
                     <div key={image} className="relative aspect-video bg-black/40 border border-white/10 rounded overflow-hidden">
-                      <Image src={image} alt={`${editingSpecies.commonName || "Species"} photo ${index + 1}`} fill className="object-cover" unoptimized />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={deliveryUrl(resolve(image), { width: 600 })} alt={`${editingSpecies.commonName || "Species"} photo ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 text-xs text-white bg-black/60 flex items-center justify-between gap-2">
                         <span>{index === 0 ? "Main photo" : `Photo ${index + 1}`}</span>
                         {index > 0 && (

@@ -1,69 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import { cloudinary, cloudinaryErrorMessage, revalidateCloudinary } from '@/lib/cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
-});
+export const dynamic = 'force-dynamic';
 
-// PUT - Update image metadata in Cloudinary
+// PUT - Update a wildlife photo's title, location and categories
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const imageId = decodeURIComponent(params.id);
-    const body = await request.json();
-    const { title, location, categories } = body;
+    if (!imageId.startsWith('wildlife/portfolio/')) {
+      return NextResponse.json({ error: 'Invalid image ID' }, { status: 400 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const title = typeof body.title === 'string' ? body.title.trim() : '';
+    const location = typeof body.location === 'string' ? body.location.trim() : '';
+    const categories = typeof body.categories === 'string' ? body.categories.trim() : '';
 
     if (!title || !location || !categories) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Missing required fields',
         details: 'Title, location, and categories are required'
       }, { status: 400 });
     }
 
-    console.log('Updating Cloudinary metadata for:', imageId);
-
-    // Update context metadata in Cloudinary
-    const result = await cloudinary.uploader.explicit(imageId, {
+    await cloudinary.uploader.explicit(imageId, {
       type: 'upload',
-      context: {
-        title: title,
-        location: location,
-        category: categories,
-      },
+      context: { title, location, category: categories },
     });
 
-    console.log('Cloudinary metadata updated successfully');
+    revalidateCloudinary();
 
-    // Revalidate pages
-    revalidatePath('/wildlife');
-    revalidatePath('/');
-
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       image: {
-        id: result.public_id,
+        id: imageId,
         title,
         location,
-        category: categories.split(',').map((c: string) => c.trim()),
+        category: categories.split(',').map((c: string) => c.trim()).filter(Boolean),
       }
     });
   } catch (error) {
-    console.error('Update error:', error);
-    return NextResponse.json({ 
-      error: 'Update failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error(`Update error: ${cloudinaryErrorMessage(error)}`);
+    const updateError = error as { message?: string; error?: { message?: string } };
+    return NextResponse.json({
+      error: 'Update failed',
+      details: updateError.error?.message || updateError.message || 'Unknown error'
     }, { status: 500 });
   }
 }

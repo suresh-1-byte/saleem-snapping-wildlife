@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import WatermarkedPhoto from "@/components/WatermarkedPhoto";
+import { cormorant } from "@/lib/fonts";
 
 interface Photo {
   id: number;
@@ -72,6 +73,7 @@ export default function Lightbox({ photos, currentIndex, onClose, onNavigate }: 
             alt={currentPhoto.alt}
             className="max-h-[80vh] object-contain"
             watermarkClassName="w-24 md:w-32"
+            deliveryWidth={2560}
           />
         </div>
       </div>
@@ -104,8 +106,10 @@ export default function Lightbox({ photos, currentIndex, onClose, onNavigate }: 
       {/* Metadata */}
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
         <div className="container-padding text-center text-white">
-          <h3 className="text-xl font-medium mb-2">{currentPhoto.title}</h3>
-          <p className="text-sm opacity-80">{currentPhoto.location}</p>
+          <h3 className={`${cormorant.className} text-xl md:text-2xl font-semibold uppercase tracking-[0.08em] mb-1`}>{currentPhoto.title}</h3>
+          {currentPhoto.location && (
+            <p className={`${cormorant.className} text-sm md:text-base font-semibold uppercase tracking-[0.13em] text-[#a7aa70]`}>{currentPhoto.location}</p>
+          )}
           <p className="text-xs opacity-60 mt-2">
             {currentIndex + 1} / {photos.length}
           </p>

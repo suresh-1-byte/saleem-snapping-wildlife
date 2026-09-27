@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import WatermarkedPhoto from "@/components/WatermarkedPhoto";
+import { useSiteImages } from "@/components/SiteImagesProvider";
+import { deliveryUrl } from "@/lib/siteImages";
 
 export default function StoryPhotoViewer({
   images,
@@ -12,6 +13,7 @@ export default function StoryPhotoViewer({
   title: string;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { resolve } = useSiteImages();
   const activeImage = images[activeIndex];
 
   if (!activeImage) return null;
@@ -56,6 +58,7 @@ export default function StoryPhotoViewer({
             fill
             className="h-full w-full object-contain [filter:sepia(0.12)]"
             watermarkClassName="w-20 md:w-24"
+            deliveryWidth={2000}
           />
           {images.length > 1 && (
             <>
@@ -84,7 +87,8 @@ export default function StoryPhotoViewer({
               aria-label={`View story photo ${index + 1}`}
               style={{ flex: "0 0 72px", height: "54px", padding: "2px", border: index === activeIndex ? "2px solid #8c5a3c" : "1px solid #c8b793", background: "#fcfaf2", opacity: index === activeIndex ? 1 : 0.7 }}
             >
-              <Image src={image} alt="" width={68} height={50} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={deliveryUrl(resolve(image), { width: 200 })} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </button>
           ))}
         </div>

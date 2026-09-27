@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import imageCompression from 'browser-image-compression';
+import { readJsonResponse, uploadImage } from "@/lib/adminUpload";
+import { deliveryUrl } from "@/lib/siteImages";
 
 interface WildlifeImage {
   id: string;
@@ -21,8 +21,9 @@ export default function WildlifeManager() {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [replacing, setReplacing] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  
+
   // Form state for ADD
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -42,16 +43,12 @@ export default function WildlifeManager() {
   }, []);
 
   async function fetchImages() {
-    setLoading(true);
     try {
-      const res = await fetch('/api/admin/portfolio');
-      const data = await res.json();
-      if (data.success) {
-        console.log('Fetched images from Cloudinary:', data.images);
-        setImages(data.images);
-      }
+      const res = await fetch('/api/admin/portfolio', { cache: 'no-store' });
+      const data = await readJsonResponse(res);
+      setImages(data.images || []);
     } catch (error) {
-      console.error('Failed to fetch wildlife images:', error);
+      setMessage(`✗ Could not load wildlife images: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -91,7 +88,7 @@ export default function WildlifeManager() {
     setEditing(image.id);
     setEditTitle(image.title);
     setEditLocation(image.location);
-    setEditCategories(image.category);
+    setEditCategories(image.category.filter((cat) => CATEGORY_OPTIONS.includes(cat)));
   }
 
   function cancelEdit() {
@@ -102,13 +99,14 @@ export default function WildlifeManager() {
   }
 
   async function saveEdit(imageId: string) {
-    if (!editTitle || !editLocation || editCategories.length === 0) {
+    if (!editTitle.trim() || !editLocation.trim() || editCategories.length === 0) {
       setMessage("✗ Please fill all fields");
       return;
     }
 
     try {
-      const res = await fetch(`/api/admin/portfolio/${imageId}`, {
+      // The ID contains slashes ("wildlife/portfolio/..."), so it must be encoded.
+      const res = await fetch(`/api/admin/portfolio/${encodeURIComponent(imageId)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -117,23 +115,54 @@ export default function WildlifeManager() {
           categories: editCategories.join(', '),
         }),
       });
+      await readJsonResponse(res);
 
-      if (res.ok) {
-        setMessage(`✓ Updated successfully!`);
-        cancelEdit();
-        fetchImages();
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        const data = await res.json();
-        setMessage(`✗ ${data.error || 'Failed to update'}`);
-      }
+      setMessage("✓ Updated! The Wildlife page now shows the changes.");
+      cancelEdit();
+      fetchImages();
+      setTimeout(() => setMessage(""), 4000);
     } catch (error) {
-      setMessage('✗ Error updating image');
+      setMessage(`✗ Could not update: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
+  // Swap the photo file but keep its title, location and categories.
+  function handleReplacePhoto(image: WildlifeImage) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      setReplacing(image.id);
+      setMessage("");
+      try {
+        await uploadImage(file, {
+          folder: "wildlife/portfolio",
+          publicId: image.id.split("/").pop(),
+          context: {
+            title: editTitle.trim() || image.title,
+            location: editLocation.trim() || image.location,
+            category: (editCategories.length > 0 ? editCategories : image.category).join(', '),
+          },
+        });
+        setMessage(`✓ Photo replaced for "${image.title}".`);
+        fetchImages();
+        setTimeout(() => setMessage(""), 4000);
+      } catch (error) {
+        setMessage(`✗ Could not replace photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        setReplacing(null);
+      }
+    };
+
+    input.click();
+  }
+
   async function handleUpload() {
-    if (!selectedFile || !title || !location || selectedCategories.length === 0) {
+    if (!selectedFile || !title.trim() || !location.trim() || selectedCategories.length === 0) {
       setMessage("✗ Please fill all fields: image, title, location, and at least one category");
       return;
     }
@@ -142,49 +171,28 @@ export default function WildlifeManager() {
     setMessage("");
 
     try {
-      // Compress image
-      const options = {
-        maxSizeMB: 3,
-        maxWidthOrHeight: 2400,
-        useWebWorker: true,
-        fileType: selectedFile.type,
-      };
-      
-      const compressedFile = await imageCompression(selectedFile, options);
-      
-      const formData = new FormData();
-      formData.append("file", compressedFile);
-      formData.append("title", title);
-      formData.append("location", location);
-      formData.append("categories", selectedCategories.join(', '));
-
-      const res = await fetch("/api/admin/portfolio", {
-        method: "POST",
-        body: formData,
+      await uploadImage(selectedFile, {
+        folder: "wildlife/portfolio",
+        context: {
+          title: title.trim(),
+          location: location.trim(),
+          category: selectedCategories.join(', '),
+        },
       });
 
-      const data = await res.json();
-      
-      if (res.ok) {
-        setMessage(`✓ Wildlife image "${title}" added successfully!`);
-        resetForm();
-        fetchImages();
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Unknown error');
-        setMessage(`✗ Failed to upload: ${errorMsg}`);
-      }
+      setMessage(`✓ "${title.trim()}" added! It is now on the Wildlife page.`);
+      resetForm();
+      fetchImages();
+      setTimeout(() => setMessage(""), 4000);
     } catch (error) {
-      setMessage(`✗ Error uploading: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMessage(`✗ Could not upload: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
     }
   }
 
   async function handleDelete(imageId: string, imageTitle: string) {
-    if (!window.confirm(`Delete "${imageTitle}"?`)) {
+    if (!window.confirm(`Delete "${imageTitle}"? It will be removed from the website.`)) {
       return;
     }
 
@@ -195,17 +203,14 @@ export default function WildlifeManager() {
       const res = await fetch(`/api/admin/portfolio?id=${encodeURIComponent(imageId)}`, {
         method: "DELETE",
       });
+      await readJsonResponse(res);
 
-      if (res.ok) {
-        setMessage(`✓ "${imageTitle}" deleted successfully`);
-        fetchImages();
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        const data = await res.json();
-        setMessage(`✗ ${data.error || 'Failed to delete'}`);
-      }
+      setImages((current) => current.filter((image) => image.id !== imageId));
+      setMessage(`✓ "${imageTitle}" deleted from the website`);
+      fetchImages();
+      setTimeout(() => setMessage(""), 4000);
     } catch (error) {
-      setMessage('✗ Error deleting image');
+      setMessage(`✗ Could not delete: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(null);
     }
@@ -222,7 +227,7 @@ export default function WildlifeManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-wider mb-2">WILDLIFE GALLERY</h2>
           <p className="text-white/60">
@@ -231,7 +236,7 @@ export default function WildlifeManager() {
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="px-6 py-3 bg-earthy-green hover:bg-earthy-green-light text-white font-medium tracking-wide rounded transition-colors"
+          className="shrink-0 px-6 py-3 bg-earthy-green hover:bg-earthy-green-light text-white font-medium tracking-wide rounded transition-colors"
         >
           {showAddForm ? "✕ Cancel" : "+ Add Image"}
         </button>
@@ -239,9 +244,9 @@ export default function WildlifeManager() {
 
       {/* Message */}
       {message && (
-        <div className={`px-4 py-3 rounded-lg border ${
-          message.startsWith("✓") 
-            ? "bg-green-500/10 border-green-500/30 text-green-400" 
+        <div role="status" className={`px-4 py-3 rounded-lg border break-words ${
+          message.startsWith("✓")
+            ? "bg-green-500/10 border-green-500/30 text-green-400"
             : "bg-red-500/10 border-red-500/30 text-red-400"
         }`}>
           {message}
@@ -250,9 +255,9 @@ export default function WildlifeManager() {
 
       {/* Upload Form */}
       {showAddForm && (
-        <div className="bg-charcoal border border-white/20 rounded-lg p-6 space-y-5">
+        <div className="bg-charcoal border border-white/20 rounded-lg p-4 sm:p-6 space-y-5">
           <h3 className="text-xl font-semibold mb-4 text-earthy-green-light">Add New Wildlife Image</h3>
-          
+
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium mb-3 text-white/90">Select Image *</label>
@@ -264,13 +269,8 @@ export default function WildlifeManager() {
             />
             {previewUrl && (
               <div className="mt-3 relative w-full h-48 bg-black rounded overflow-hidden">
-                <Image 
-                  src={previewUrl} 
-                  alt="Preview" 
-                  fill 
-                  className="object-contain" 
-                  unoptimized
-                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-contain" />
               </div>
             )}
           </div>
@@ -331,7 +331,7 @@ export default function WildlifeManager() {
           {/* Submit Button */}
           <button
             onClick={handleUpload}
-            disabled={uploading || !selectedFile || !title || !location || selectedCategories.length === 0}
+            disabled={uploading || !selectedFile || !title.trim() || !location.trim() || selectedCategories.length === 0}
             className="w-full px-6 py-4 bg-earthy-green hover:bg-earthy-green-light text-white font-semibold text-lg tracking-wide rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? "Uploading..." : "Upload Wildlife Image"}
@@ -340,22 +340,22 @@ export default function WildlifeManager() {
       )}
 
       {/* Image Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {images.map((image) => (
           <div
             key={image.id}
             className="bg-charcoal border border-white/10 rounded-lg overflow-hidden hover:border-earthy-green/50 transition-all"
           >
             <div className="relative aspect-square bg-black">
-              <Image
-                src={image.cloudinaryUrl}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={deliveryUrl(image.cloudinaryUrl, { width: 800 })}
                 alt={image.title}
-                fill
-                className="object-cover"
-                unoptimized
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
-            
+
             {/* Image Details or Edit Form */}
             <div className="p-4 space-y-3">
               {editing === image.id ? (
@@ -379,6 +379,7 @@ export default function WildlifeManager() {
                     {CATEGORY_OPTIONS.map(cat => (
                       <button
                         key={cat}
+                        type="button"
                         onClick={() => {
                           if (editCategories.includes(cat)) {
                             setEditCategories(editCategories.filter(c => c !== cat));
@@ -396,6 +397,14 @@ export default function WildlifeManager() {
                       </button>
                     ))}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleReplacePhoto(image)}
+                    disabled={replacing === image.id}
+                    className="w-full px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded transition-colors disabled:opacity-50"
+                  >
+                    {replacing === image.id ? "Uploading..." : "🖼️ Replace photo"}
+                  </button>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => saveEdit(image.id)}
@@ -415,8 +424,8 @@ export default function WildlifeManager() {
                 // VIEW MODE
                 <>
                   <div>
-                    <h4 className="font-semibold text-lg">{image.title}</h4>
-                    <p className="text-sm text-white/60 mt-1">{image.location}</p>
+                    <h4 className="font-semibold text-lg break-words">{image.title}</h4>
+                    <p className="text-sm text-white/60 mt-1 break-words">{image.location}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {image.category.map(cat => (
                         <span key={cat} className="text-xs px-2 py-1 bg-earthy-green/20 text-earthy-green-light rounded">

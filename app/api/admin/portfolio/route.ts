@@ -1,49 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import { cloudinary, cloudinaryErrorMessage, listAssets, revalidateCloudinary } from '@/lib/cloudinary';
+import { toPortfolioImage } from '@/lib/portfolioData';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
-});
+export const dynamic = 'force-dynamic';
 
-// GET - Fetch all portfolio images from Cloudinary
-export async function GET(request: NextRequest) {
-  try {
-    // Fetch all images from wildlife/portfolio folder in Cloudinary
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      prefix: 'wildlife/portfolio',
-      max_results: 500,
-      context: true, // Include metadata
-    });
-
-    const images = result.resources.map((resource: any) => ({
-      id: resource.public_id,
-      cloudinaryUrl: resource.secure_url,
-      cloudinaryPublicId: resource.public_id,
-      title: resource.context?.custom?.title || 'Untitled',
-      location: resource.context?.custom?.location || 'Unknown',
-      category: resource.context?.custom?.category ? resource.context.custom.category.split(',') : ['All'],
-      uploadedAt: resource.created_at,
-    }));
-
-    console.log(`Fetched ${images.length} portfolio images from Cloudinary`);
-    return NextResponse.json({ success: true, images });
-  } catch (error) {
-    console.error('Error fetching portfolio data from Cloudinary:', error);
-    return NextResponse.json({ success: true, images: [] });
-  }
+// GET - Wildlife page photos (same source the /wildlife page renders from)
+export async function GET() {
+  const images = (await listAssets('wildlife/portfolio/')).map(toPortfolioImage);
+  return NextResponse.json({ success: true, images }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
-// POST - Add new portfolio image with metadata stored in Cloudinary
+// POST - Server-side upload fallback; the admin panel uploads directly to Cloudinary.
 export async function POST(request: NextRequest) {
   try {
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -51,95 +22,60 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const title = formData.get('title') as string;
     const location = formData.get('location') as string;
-    const categories = formData.get('categories') as string; // comma-separated
+    const categories = formData.get('categories') as string;
 
     if (!file || !title || !location || !categories) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Missing required fields',
         details: 'File, title, location, and categories are required'
       }, { status: 400 });
     }
 
-    // Convert file to base64
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataURI = `data:${file.type};base64,${base64}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const dataURI = `data:${file.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
 
-    console.log('Uploading to Cloudinary with metadata:', { title, location, categories });
-
-    // Upload to Cloudinary WITH metadata in context
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: 'wildlife/portfolio',
-      resource_type: 'auto',
-      context: {
-        title: title,
-        location: location,
-        category: categories,
-      },
+      resource_type: 'image',
+      context: { title, location, category: categories },
     });
 
-    console.log('Cloudinary upload successful:', result.secure_url);
+    revalidateCloudinary();
 
-    const newImage = {
-      id: result.public_id,
-      cloudinaryUrl: result.secure_url,
-      cloudinaryPublicId: result.public_id,
-      title,
-      location,
-      category: categories.split(',').map((c: string) => c.trim()),
-      uploadedAt: result.created_at,
-    };
-
-    // Revalidate pages
-    revalidatePath('/wildlife');
-    revalidatePath('/');
-
-    return NextResponse.json({ 
-      success: true, 
-      image: newImage
-    });
+    return NextResponse.json({ success: true, image: { id: result.public_id, cloudinaryUrl: result.secure_url } });
   } catch (error) {
-    console.error('Portfolio upload error:', error);
-    return NextResponse.json({ 
-      error: 'Upload failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error(`Portfolio upload error: ${cloudinaryErrorMessage(error)}`);
+    return NextResponse.json({
+      error: 'Upload failed',
+      details: cloudinaryErrorMessage(error)
     }, { status: 500 });
   }
 }
 
-// DELETE - Remove portfolio image from Cloudinary
+// DELETE - Remove a wildlife photo from Cloudinary (and so from the website)
 export async function DELETE(request: NextRequest) {
   try {
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const imageId = searchParams.get('id');
-
-    if (!imageId) {
-      return NextResponse.json({ error: 'Image ID required' }, { status: 400 });
+    const imageId = new URL(request.url).searchParams.get('id');
+    if (!imageId || !imageId.startsWith('wildlife/portfolio/')) {
+      return NextResponse.json({ error: 'Valid image ID required' }, { status: 400 });
     }
 
-    console.log('Deleting from Cloudinary:', imageId);
+    const result = await cloudinary.uploader.destroy(imageId, { invalidate: true });
+    if (result.result !== 'ok' && result.result !== 'not found') {
+      return NextResponse.json({ error: 'Delete failed', details: result.result }, { status: 500 });
+    }
 
-    // Delete from Cloudinary
-    const result = await cloudinary.uploader.destroy(imageId);
-
-    console.log('Delete result:', result);
-
-    // Revalidate pages
-    revalidatePath('/wildlife');
-    revalidatePath('/');
-
+    revalidateCloudinary();
     return NextResponse.json({ success: true, result });
   } catch (error) {
-    console.error('Portfolio delete error:', error);
-    return NextResponse.json({ 
-      error: 'Delete failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error(`Portfolio delete error: ${cloudinaryErrorMessage(error)}`);
+    return NextResponse.json({
+      error: 'Delete failed',
+      details: cloudinaryErrorMessage(error)
     }, { status: 500 });
   }
 }

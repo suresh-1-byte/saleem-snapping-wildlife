@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImagesProvider";
 import AnimatedSection from "@/components/AnimatedSection";
 
 export const metadata: Metadata = {
@@ -158,8 +158,9 @@ export default function AboutPage() {
                 &ldquo;Every frame carries a whisper of the wild. This is mine.&rdquo;
               </div>
               <div className="mt-4 flex justify-end pr-2">
-                <Image
+                <SiteImage
                   src="/images/watermark.png"
+                  deliveryWidth={480}
                   alt="Saleem Snapping signature"
                   width={240}
                   height={96}
@@ -186,8 +187,9 @@ export default function AboutPage() {
                   
                   <div className="relative w-full h-auto overflow-hidden rounded-sm">
                     {/* Image automatically scales and adjusts frame height based on source aspect ratio */}
-                    <Image
+                    <SiteImage
                       src="/images/about-portrait.jpg"
+                      deliveryWidth={1200}
                       alt="Saleem Snapping - Wildlife Photographer"
                       width={800}
                       height={1000}

@@ -34,7 +34,9 @@ export async function readContent<T>(filename: string, key: string): Promise<T[]
       const data = await response.json();
       return Array.isArray(data[key]) ? data[key] : [];
     } catch (error) {
-      console.error(`Cloudinary read failed for ${filename}:`, error);
+      // Log only the message: the raw Cloudinary error includes the API secret.
+      const err = error as { message?: string; error?: { message?: string } };
+      console.error(`Cloudinary read failed for ${filename}: ${err?.error?.message || err?.message}`);
     }
   }
 

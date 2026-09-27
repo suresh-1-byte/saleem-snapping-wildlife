@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 import { readContent, writeContent } from '@/lib/contentStorage';
-import { revalidatePath } from 'next/cache';
+import { revalidateCloudinary } from '@/lib/cloudinary';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -39,8 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     await writeContent('species.json', 'species', species);
-    revalidatePath('/species');
-    revalidatePath('/');
+    revalidateCloudinary();
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to save species' }, { status: 500 });
@@ -61,8 +62,7 @@ export async function DELETE(request: NextRequest) {
 
     const species = await readContent<any>('species.json', 'species');
     await writeContent('species.json', 'species', species.filter((s: any) => s.id !== id));
-    revalidatePath('/species');
-    revalidatePath('/');
+    revalidateCloudinary();
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete species' }, { status: 500 });

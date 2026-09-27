@@ -51,10 +51,10 @@ export default function AdminDashboard() {
       {/* Navigation Tabs */}
       <div className="bg-charcoal/50 border-b border-white/10">
         <div className="container-padding">
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:overflow-x-auto">
             <button
               onClick={() => setActiveTab("wildlife")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "wildlife"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("images")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "images"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("featured")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "featured"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("stories")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "stories"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -94,7 +94,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("species")}
-              className={`px-6 py-3 text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
                 activeTab === "species"
                   ? "bg-earthy-green text-white"
                   : "text-white/60 hover:text-white hover:bg-white/5"

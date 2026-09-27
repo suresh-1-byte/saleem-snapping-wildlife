@@ -4,44 +4,29 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Rye, Cormorant_Garamond } from "next/font/google";
+import { Rye } from "next/font/google";
+import { useSiteImages } from "@/components/SiteImagesProvider";
+import { cormorant } from "@/lib/fonts";
+import { deliveryUrl } from "@/lib/siteImages";
+
+// Local default; replaced by the "Hero Background" upload in the admin panel.
+const HERO_IMAGE = "/images/hero%20pg.png";
 
 const rye = Rye({
   weight: "400",
   subsets: ["latin"],
 });
 
-const cormorant = Cormorant_Garamond({
-  weight: ["500", "600", "700"],
-  subsets: ["latin"],
-});
-
 export default function Hero() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [heroBg, setHeroBg] = useState("/images/hero%20pg.png");
+  const { resolve } = useSiteImages();
+  const heroSrc = resolve(HERO_IMAGE);
+  const isUploaded = heroSrc !== HERO_IMAGE;
+  // Full original resolution; Cloudinary only picks the best file format.
+  const heroBg = isUploaded ? deliveryUrl(heroSrc, { quality: "auto:best" }) : heroSrc;
 
   useEffect(() => {
     setIsLoaded(true);
-    
-    // Fetch the hero image from the images API
-    fetch('/api/admin/images')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.images) {
-          console.log('Available image paths:', Object.keys(data.images));
-          const heroUrl = data.images['/images/hero pg'] || 
-                         data.images['/images/hero%20pg'] || 
-                         data.images['/images/hero pg.png'] ||
-                         data.images['/images/hero%20pg.png'];
-          if (heroUrl) {
-            console.log('Hero image found:', heroUrl);
-            setHeroBg(heroUrl);
-          } else {
-            console.log('Hero image not found in Cloudinary, using local');
-          }
-        }
-      })
-      .catch(err => console.error('Failed to fetch hero image:', err));
   }, []);
 
   return (
@@ -70,8 +55,7 @@ export default function Hero() {
           fill
           priority
           unoptimized
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-          quality={100}
+          sizes="100vw"
           className="object-cover object-[30%_center] sm:object-center"
           style={{
             imageRendering: '-webkit-optimize-contrast',

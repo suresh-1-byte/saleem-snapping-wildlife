@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import { cloudinary, cloudinaryErrorMessage, isCloudinaryConfigured, isManagedPublicId, revalidateCloudinary } from '@/lib/cloudinary';
+import { publicIdForPath } from '@/lib/siteImages';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'demo',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
-});
+export const dynamic = 'force-dynamic';
 
+// Server-side upload, kept as a fallback. The admin panel uploads directly from
+// the browser to Cloudinary (see /api/admin/cloudinary/sign) to avoid request
+// size limits.
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!isCloudinaryConfigured()) {
+      return NextResponse.json({
+        error: 'Cloudinary not configured',
+        details: 'Please set up Cloudinary environment variables'
+      }, { status: 500 });
     }
 
     const formData = await request.formData();
@@ -26,154 +29,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    if (!imagePath) {
-      return NextResponse.json({ error: 'No image path provided' }, { status: 400 });
-    }
-
-    // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_CLOUD_NAME) {
-      return NextResponse.json({ 
-        error: 'Cloudinary not configured',
-        details: 'Please set up Cloudinary environment variables'
-      }, { status: 500 });
-    }
-
-    // Convert file to base64
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataURI = `data:${file.type};base64,${base64}`;
-
-    // Extract folder and filename from path
-    const relativePath = decodeURIComponent(imagePath).replace(/^[/\\]+/, '');
-    const pathParts = relativePath.split('/');
-    const filename = pathParts[pathParts.length - 1]
-      .replace(/\.[^/.]+$/, '')
-      .replace(/[^a-zA-Z0-9_-]/g, '-');
-    const folder = pathParts
-      .slice(0, -1)
-      .map((part) => part.replace(/[^a-zA-Z0-9_-]/g, '-'))
-      .filter(Boolean)
-      .join('/');
-
-    if (!filename) {
+    const publicId = imagePath ? publicIdForPath(imagePath) : null;
+    if (!publicId || !isManagedPublicId(publicId)) {
       return NextResponse.json({ error: 'Invalid image path' }, { status: 400 });
     }
 
-    console.log('Upload details:', { 
-      originalPath: imagePath, 
-      relativePath, 
-      folder, 
-      filename,
-      fileSize: file.size,
-      fileType: file.type
-    });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const dataURI = `data:${file.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
 
-    // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(dataURI, {
-      folder: folder || 'wildlife',
-      public_id: filename,
+      public_id: publicId,
       overwrite: true,
       invalidate: true,
-      resource_type: 'auto',
+      resource_type: 'image',
     });
 
-    console.log('Cloudinary upload successful:', { 
-      url: result.secure_url,
-      publicId: result.public_id,
-      format: result.format,
-      width: result.width,
-      height: result.height
-    });
+    revalidateCloudinary();
 
-    // Force revalidation of all image-related pages
-    try {
-      revalidatePath('/', 'layout');
-      revalidatePath('/');
-      revalidatePath('/wildlife');
-      revalidatePath('/species');
-      revalidatePath('/stories');
-      revalidatePath('/about');
-      revalidatePath('/contact');
-      console.log('Cache revalidation completed');
-    } catch (revalidateError) {
-      console.error('Revalidation error:', revalidateError);
-    }
-
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       path: result.secure_url,
       publicId: result.public_id
     });
   } catch (error) {
-    console.error('Upload error:', error);
-    const uploadError = error as {
-      message?: string;
-      name?: string;
-      http_code?: number;
-      error?: { message?: string };
-    };
-    const details = uploadError.error?.message || uploadError.message || 'Unknown upload error';
-    return NextResponse.json({ 
-      error: 'Upload failed', 
-      details,
-      code: uploadError.http_code,
-      type: uploadError.name,
+    console.error(`Upload error: ${cloudinaryErrorMessage(error)}`);
+    const uploadError = error as { message?: string; error?: { message?: string } };
+    return NextResponse.json({
+      error: 'Upload failed',
+      details: uploadError.error?.message || uploadError.message || 'Unknown upload error',
     }, { status: 500 });
   }
 }
 
+// Removes an uploaded image. For fixed website images this restores the
+// original default from /public/images.
 export async function DELETE(request: NextRequest) {
   try {
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const url = new URL(request.url);
-    let publicId = url.searchParams.get('publicId');
-    const imagePath = url.searchParams.get('imagePath');
+    const { searchParams } = new URL(request.url);
+    const imagePath = searchParams.get('imagePath');
+    const publicId = searchParams.get('publicId') || (imagePath ? publicIdForPath(imagePath) : null);
 
-    // If publicId not provided, construct it from imagePath
-    if (!publicId && imagePath) {
-      const relativePath = decodeURIComponent(imagePath).replace(/^[/\\]+/, '');
-      const pathParts = relativePath.split('/');
-      const filename = pathParts[pathParts.length - 1].replace(/\.[^/.]+$/, ''); // Remove extension
-      const folder = pathParts.slice(0, -1).join('/');
-      publicId = folder ? `${folder}/${filename}` : filename;
+    if (!publicId || !isManagedPublicId(publicId)) {
+      return NextResponse.json({ error: 'Invalid image to remove' }, { status: 400 });
     }
 
-    if (!publicId) {
-      return NextResponse.json({ error: 'No public ID or image path provided' }, { status: 400 });
+    const result = await cloudinary.uploader.destroy(publicId, { invalidate: true });
+    if (result.result !== 'ok' && result.result !== 'not found') {
+      return NextResponse.json({ error: 'Delete failed', details: result.result }, { status: 500 });
     }
 
-    console.log('Deleting from Cloudinary:', publicId);
-
-    // Delete from Cloudinary
-    const result = await cloudinary.uploader.destroy(publicId);
-    
-    console.log('Cloudinary delete result:', result);
-    
-    // Force revalidation of all image-related pages
-    try {
-      revalidatePath('/', 'layout');
-      revalidatePath('/');
-      revalidatePath('/wildlife');
-      revalidatePath('/species');
-      revalidatePath('/stories');
-      revalidatePath('/about');
-      revalidatePath('/contact');
-      console.log('Cache revalidation completed after delete');
-    } catch (revalidateError) {
-      console.error('Revalidation error:', revalidateError);
-    }
-    
+    revalidateCloudinary();
     return NextResponse.json({ success: true, result });
-  } catch (error: any) {
-    console.error('Delete error:', error);
-    return NextResponse.json({ 
+  } catch (error) {
+    console.error(`Delete error: ${cloudinaryErrorMessage(error)}`);
+    const deleteError = error as { message?: string; error?: { message?: string } };
+    return NextResponse.json({
       error: 'Delete failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: deleteError.error?.message || deleteError.message || 'Unknown error'
     }, { status: 500 });
   }
 }

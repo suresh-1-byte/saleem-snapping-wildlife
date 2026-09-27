@@ -1,122 +1,76 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import { cloudinary, cloudinaryErrorMessage, listAssets, revalidateCloudinary } from '@/lib/cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
-});
+export const dynamic = 'force-dynamic';
 
-// GET - Fetch all featured images from Cloudinary
-export async function GET(request: NextRequest) {
-  try {
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      prefix: 'wildlife/featured',
-      max_results: 500,
-    });
-
-    const images = result.resources.map((resource: any) => ({
-      id: resource.public_id,
-      cloudinaryUrl: resource.secure_url,
-      cloudinaryPublicId: resource.public_id,
-      uploadedAt: resource.created_at,
-    }));
-
-    console.log(`Fetched ${images.length} featured images from Cloudinary`);
-    return NextResponse.json({ success: true, images });
-  } catch (error) {
-    console.error('Error fetching featured data from Cloudinary:', error);
-    return NextResponse.json({ success: true, images: [] });
-  }
+// GET - Homepage "Featured Work" photos (same source the homepage renders from)
+export async function GET() {
+  const images = (await listAssets('wildlife/featured/')).map((asset) => ({
+    id: asset.publicId,
+    cloudinaryUrl: asset.url,
+    cloudinaryPublicId: asset.publicId,
+    uploadedAt: asset.createdAt,
+  }));
+  return NextResponse.json({ success: true, images }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
-// POST - Add new featured image to Cloudinary
+// POST - Server-side upload fallback; the admin panel uploads directly to Cloudinary.
 export async function POST(request: NextRequest) {
   try {
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-
+    const file = (await request.formData()).get('file') as File;
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Convert file to base64
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataURI = `data:${file.type};base64,${base64}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const dataURI = `data:${file.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
 
-    // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: 'wildlife/featured',
-      resource_type: 'auto',
+      resource_type: 'image',
     });
 
-    console.log('Cloudinary upload successful:', result.secure_url);
+    revalidateCloudinary();
 
-    const newImage = {
-      id: result.public_id,
-      cloudinaryUrl: result.secure_url,
-      cloudinaryPublicId: result.public_id,
-      uploadedAt: result.created_at,
-    };
-
-    // Revalidate pages
-    revalidatePath('/');
-
-    return NextResponse.json({ 
-      success: true, 
-      image: newImage
-    });
+    return NextResponse.json({ success: true, image: { id: result.public_id, cloudinaryUrl: result.secure_url } });
   } catch (error) {
-    console.error('Featured upload error:', error);
-    return NextResponse.json({ 
-      error: 'Upload failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error(`Featured upload error: ${cloudinaryErrorMessage(error)}`);
+    return NextResponse.json({
+      error: 'Upload failed',
+      details: cloudinaryErrorMessage(error)
     }, { status: 500 });
   }
 }
 
-// DELETE - Remove featured image from Cloudinary
+// DELETE - Remove a featured photo from Cloudinary (and so from the homepage)
 export async function DELETE(request: NextRequest) {
   try {
-    const authenticated = await isAuthenticated();
-    if (!authenticated) {
+    if (!(await isAuthenticated())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const imageId = searchParams.get('id');
-
-    if (!imageId) {
-      return NextResponse.json({ error: 'Image ID required' }, { status: 400 });
+    const imageId = new URL(request.url).searchParams.get('id');
+    if (!imageId || !imageId.startsWith('wildlife/featured/')) {
+      return NextResponse.json({ error: 'Valid image ID required' }, { status: 400 });
     }
 
-    console.log('Deleting from Cloudinary:', imageId);
+    const result = await cloudinary.uploader.destroy(imageId, { invalidate: true });
+    if (result.result !== 'ok' && result.result !== 'not found') {
+      return NextResponse.json({ error: 'Delete failed', details: result.result }, { status: 500 });
+    }
 
-    // Delete from Cloudinary
-    const result = await cloudinary.uploader.destroy(imageId);
-
-    console.log('Delete result:', result);
-
-    // Revalidate pages
-    revalidatePath('/');
-
+    revalidateCloudinary();
     return NextResponse.json({ success: true, result });
   } catch (error) {
-    console.error('Featured delete error:', error);
-    return NextResponse.json({ 
-      error: 'Delete failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error(`Featured delete error: ${cloudinaryErrorMessage(error)}`);
+    return NextResponse.json({
+      error: 'Delete failed',
+      details: cloudinaryErrorMessage(error)
     }, { status: 500 });
   }
 }
