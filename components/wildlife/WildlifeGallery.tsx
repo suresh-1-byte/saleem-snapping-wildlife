@@ -1,16 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Caveat } from "next/font/google";
 import Lightbox from "@/components/Lightbox";
 import WatermarkedPhoto from "@/components/WatermarkedPhoto";
 import { cormorant } from "@/lib/fonts";
-
-// Google Handwritten Font configuration
-const caveat = Caveat({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
 
 type Category = "All" | "Birds" | "Mammals" | "Macro" | "Landscapes" | "Wildlife Moments";
 
@@ -82,10 +75,10 @@ export default function WildlifeGallery({ images }: { images: PortfolioImage[] }
         
         {/* Gallery Title Header */}
         <div className="text-center mb-12">
-          <h2 className={`${caveat.className} text-3xl md:text-5xl font-semibold tracking-wide mb-2 text-stone-200`}>
+          <h2 className={`${cormorant.className} text-3xl md:text-5xl font-semibold tracking-wide mb-2 text-stone-200`}>
             The Wild, As I See It.
           </h2>
-          <p className={`${caveat.className} text-stone-400 text-xl md:text-2xl font-medium`}>
+          <p className={`${cormorant.className} text-stone-400 text-xl md:text-2xl font-medium`}>
             Wildlife Moments
           </p>
         </div>
