@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { SiteImage } from "@/components/SiteImagesProvider";
+import type { ContactSettings } from "@/lib/contactSettings";
 
-export default function Footer() {
+export default function Footer({ contact }: { contact: ContactSettings }) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -19,23 +19,31 @@ export default function Footer() {
             height={96}
             className="w-40 md:w-52 h-auto object-contain"
           />
-          <div className="flex items-center space-x-6 text-sm opacity-60">
-            <Link
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-100 transition-opacity duration-300"
-            >
-              Instagram
-            </Link>
-            <span>•</span>
-            <Link
-              href="mailto:[your email]"
-              className="hover:opacity-100 transition-opacity duration-300"
-            >
-              Email
-            </Link>
-            <span>•</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm opacity-60">
+            {contact.instagramUrl && (
+              <>
+                <a
+                  href={contact.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-100 transition-opacity duration-300"
+                >
+                  Instagram
+                </a>
+                <span aria-hidden="true">•</span>
+              </>
+            )}
+            {contact.email && (
+              <>
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="hover:opacity-100 transition-opacity duration-300"
+                >
+                  Email
+                </a>
+                <span aria-hidden="true">•</span>
+              </>
+            )}
             <span>© {currentYear}</span>
           </div>
         </div>

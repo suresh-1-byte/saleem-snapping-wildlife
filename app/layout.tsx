@@ -4,7 +4,9 @@ import "./globals.css";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { SiteImagesProvider } from "@/components/SiteImagesProvider";
+import SiteChrome from "@/components/SiteChrome";
 import { getSiteImageMap } from "@/lib/cloudinary";
+import { getContactSettings } from "@/lib/contactSettingsStore";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -60,7 +62,7 @@ export default async function RootLayout({
 }>) {
   // Admin-uploaded replacements for the site's images, shared with every page
   // so the website always shows exactly what the admin panel shows.
-  const siteImages = await getSiteImageMap();
+  const [siteImages, contact] = await Promise.all([getSiteImageMap(), getContactSettings()]);
 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} ${cinzel.variable}`}>
@@ -72,9 +74,10 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <SiteImagesProvider images={siteImages}>
-          <Navigation />
-          <main>{children}</main>
-          <Footer />
+          {/* Header, footer and music are hidden on admin pages */}
+          <SiteChrome header={<Navigation />} footer={<Footer contact={contact} />}>
+            {children}
+          </SiteChrome>
         </SiteImagesProvider>
       </body>
     </html>

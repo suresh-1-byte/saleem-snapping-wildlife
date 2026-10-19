@@ -7,8 +7,9 @@ import ImagesManager from "./ImagesManager";
 import FeaturedManager from "./FeaturedManager";
 import StoriesManager from "./StoriesManager";
 import SpeciesManager from "./SpeciesManager";
+import ContactManager from "./ContactManager";
 
-type Tab = "wildlife" | "images" | "featured" | "stories" | "species";
+type Tab = "wildlife" | "images" | "featured" | "stories" | "species" | "contact";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("wildlife");
@@ -102,6 +103,16 @@ export default function AdminDashboard() {
             >
               🦁 SPECIES
             </button>
+            <button
+              onClick={() => setActiveTab("contact")}
+              className={`px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium tracking-wider transition-colors whitespace-nowrap ${
+                activeTab === "contact"
+                  ? "bg-earthy-green text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              ✉️ CONTACT
+            </button>
           </div>
         </div>
       </div>
@@ -113,6 +124,7 @@ export default function AdminDashboard() {
         {activeTab === "featured" && <FeaturedManager />}
         {activeTab === "stories" && <StoriesManager />}
         {activeTab === "species" && <SpeciesManager />}
+        {activeTab === "contact" && <ContactManager />}
       </div>
     </div>
   );

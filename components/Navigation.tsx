@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SiteImage } from "@/components/SiteImagesProvider";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { MusicToggle } from "@/components/AmbientSound";
 
 const navigationItems = [
   { name: "Home", href: "/" },
@@ -55,11 +56,11 @@ export default function Navigation() {
         }`}
       >
         <div className="container-padding">
-          <div className="flex items-center justify-between h-20 lg:h-24">
+          <div className="flex items-center justify-between gap-3 h-20 lg:h-24">
             {/* Logo with animation */}
             <Link
               href="/"
-              className="group flex items-center gap-3 text-sm lg:text-base font-medium tracking-[0.18em] hover:opacity-70 transition-opacity duration-300"
+              className="group flex items-center gap-2 sm:gap-3 whitespace-nowrap text-sm lg:text-base font-medium tracking-[0.1em] sm:tracking-[0.18em] hover:opacity-70 transition-opacity duration-300"
             >
               <SiteImage
                 src="/images/watermark.png"
@@ -67,7 +68,7 @@ export default function Navigation() {
                 alt="Saleem Snapping logo"
                 width={180}
                 height={72}
-                className="w-20 sm:w-24 lg:w-28 h-auto object-contain"
+                className="w-16 sm:w-24 lg:w-28 h-auto object-contain"
               />
               <motion.span
                 className="inline-block font-serif"
@@ -103,6 +104,10 @@ export default function Navigation() {
               ))}
             </div>
 
+            <div className="flex items-center gap-3 lg:gap-0">
+            {/* Background music on/off */}
+            <MusicToggle className="lg:ml-8" />
+
             {/* Mobile Menu Button with enhanced animation */}
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
@@ -136,6 +141,7 @@ export default function Navigation() {
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               />
             </motion.button>
+            </div>
           </div>
         </div>
       </motion.nav>

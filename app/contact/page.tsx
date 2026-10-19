@@ -3,6 +3,7 @@ import ContactForm from "@/components/contact/ContactForm";
 import ContactHero from "@/components/contact/ContactHero";
 import AnimatedSection from "@/components/AnimatedSection";
 import { LeafDoodle } from "@/components/Doodles";
+import { getContactSettings } from "@/lib/contactSettingsStore";
 
 export const metadata: Metadata = {
   title: "Contact | Saleem Snapping",
@@ -13,7 +14,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  // Edited in the admin panel's Contact tab.
+  const contact = await getContactSettings();
+
   return (
     <>
       <div className="relative min-h-screen overflow-hidden">
@@ -40,35 +44,39 @@ export default function ContactPage() {
               </AnimatedSection>
 
               <div className="space-y-8 mb-16">
-                <AnimatedSection delay={0.2}>
-                  <div>
-                    <div className="text-sm tracking-wider uppercase opacity-60 mb-2">
-                      Email
+                {contact.email && (
+                  <AnimatedSection delay={0.2}>
+                    <div>
+                      <div className="text-sm tracking-wider uppercase opacity-60 mb-2">
+                        Email
+                      </div>
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="text-lg break-all hover:opacity-70 transition-opacity duration-300"
+                      >
+                        {contact.email}
+                      </a>
                     </div>
-                    <a
-                      href="mailto:[your email]"
-                      className="text-lg hover:opacity-70 transition-opacity duration-300"
-                    >
-                      [your email]
-                    </a>
-                  </div>
-                </AnimatedSection>
-                
-                <AnimatedSection delay={0.3}>
-                  <div>
-                    <div className="text-sm tracking-wider uppercase opacity-60 mb-2">
-                      Instagram
+                  </AnimatedSection>
+                )}
+
+                {contact.instagramUrl && (
+                  <AnimatedSection delay={0.3}>
+                    <div>
+                      <div className="text-sm tracking-wider uppercase opacity-60 mb-2">
+                        Instagram
+                      </div>
+                      <a
+                        href={contact.instagramUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-lg break-all hover:opacity-70 transition-opacity duration-300"
+                      >
+                        @{contact.instagramUsername}
+                      </a>
                     </div>
-                    <a
-                      href="https://instagram.com/[your Instagram]"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-lg hover:opacity-70 transition-opacity duration-300"
-                    >
-                      [your Instagram]
-                    </a>
-                  </div>
-                </AnimatedSection>
+                  </AnimatedSection>
+                )}
                 
                 <AnimatedSection delay={0.4}>
                   <div>
